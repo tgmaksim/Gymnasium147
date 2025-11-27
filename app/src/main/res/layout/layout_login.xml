@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:id="@+id/contentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- Логотип приложения -->
+        <ImageView
+            android:id="@+id/logoApp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@mipmap/ic_launcher_foreground"
+            android:contentDescription="@string/app_name"
+            android:layout_marginTop="60dp"/>
+
+        <!-- Название приложения -->
+        <TextView
+            android:id="@+id/appName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="16dp"/>
+
+        <!-- Пояснительный текст -->
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Это приложение создано для распространения идей школьного ученического самоуправления в Гимназии и удобного использования расписания уроков"
+            android:textSize="16sp"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp"
+            android:lineSpacingExtra="4dp"
+            android:gravity="center"/>
+
+        <!-- Кнопка входа через Дневник.ру -->
+        <LinearLayout
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/login_btn_glass_bg"
+            android:padding="12dp"
+            android:layout_marginTop="32dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@mipmap/logo_dnevnik"
+                android:contentDescription="дневник"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Войти через Дневник.ру"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:layout_marginStart="12dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

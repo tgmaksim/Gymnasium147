@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="45dp"
+    android:layout_height="45dp"
+    android:layout_marginEnd="8dp"
+    android:background="@drawable/bg_day_glass"
+    android:clickable="true"
+    android:orientation="vertical"
+    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+    <TextView
+        android:id="@+id/tvDayWeek"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="ПН"
+        android:textSize="10sp"
+        android:alpha="0.7"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="@color/text_primary"/>
+
+    <TextView
+        android:id="@+id/tvDayNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="10"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:fontFamily="sans-serif-medium"/>
+
+</LinearLayout>

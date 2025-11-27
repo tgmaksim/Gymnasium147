@@ -1,0 +1,39 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_margin="5dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_lesson_glass"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/tvTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="08:00 - 08:45"
+        android:textSize="14sp"
+        android:textColor="@color/lesson_time"
+        android:fontFamily="sans-serif-medium"/>
+
+    <TextView
+        android:id="@+id/tvSubject"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Математика"
+        android:textSize="18sp"
+        android:textColor="@color/lesson_subject"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginTop="4dp"/>
+
+    <TextView
+        android:id="@+id/tvRoom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Кабинет 101"
+        android:textSize="14sp"
+        android:textColor="@color/lesson_room"
+        android:layout_marginTop="2dp"/>
+</LinearLayout>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/it_schedule"
+        android:icon="@drawable/schedule"
+        android:title="@string/menu_item_schedule" />
+
+    <item
+        android:id="@+id/it_actions"
+        android:icon="@drawable/actions"
+        android:title="@string/menu_item_actions" />
+
+    <item
+        android:id="@+id/it_profile"
+        android:icon="@drawable/profile"
+        android:title="@string/menu_item_profile" />
+
+    <item
+        android:id="@+id/it_settings"
+        android:icon="@drawable/settings"
+        android:title="@string/menu_item_settings" />
+
+</menu>

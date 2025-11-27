@@ -1,0 +1,12 @@
+<resources>
+    <style name="Theme.Gymnasium" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="Theme.Gymnasium.Splash" parent="Theme.Gymnasium">
+        <item name="android:windowBackground">@drawable/bg_gradient</item>
+    </style>
+</resources>

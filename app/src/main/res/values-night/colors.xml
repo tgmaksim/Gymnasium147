@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_gradient_start">#1A1A1A</color>
+    <color name="bg_gradient_center">#2E7DA8</color>
+    <color name="bg_gradient_end">#000000</color>
+
+    <color name="text_primary">#FFFFFF</color>
+    <color name="bottom_menu_bg">#000000</color>
+    <color name="bottom_menu_icon_checked">#FFFFFF</color>
+    <color name="bottom_menu_icon">#4FC3F7</color>
+
+    <color name="glass_card_bg">#30101010</color>
+    <color name="lesson_time">#4FC3F7</color>
+    <color name="lesson_subject">#FFFFFF</color>
+    <color name="lesson_room">#CCCCCC</color>
+</resources>
