@@ -42,6 +42,7 @@ class LessonsAdapter(private var lessons: List<Lesson>) :
         val tvTime: TextView = view.findViewById(R.id.tvTime)
         val tvSubject: TextView = view.findViewById(R.id.tvSubject)
         val tvRoom: TextView = view.findViewById(R.id.tvRoom)
+        val tvHomework: TextView = view.findViewById(R.id.tvHomework)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
@@ -55,6 +56,10 @@ class LessonsAdapter(private var lessons: List<Lesson>) :
         holder.tvTime.text = lesson.hours
         holder.tvSubject.text = lesson.subject
         holder.tvRoom.text = lesson.place
+        if (lesson.homework.isEmpty())
+            holder.tvHomework.text = "Нет домашнего задания"
+        else
+            holder.tvHomework.text = lesson.homework
     }
 
     fun updateLessons(newLessons: List<Lesson>) {

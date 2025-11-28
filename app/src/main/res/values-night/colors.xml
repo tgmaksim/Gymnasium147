@@ -13,4 +13,6 @@
     <color name="lesson_time">#4FC3F7</color>
     <color name="lesson_subject">#FFFFFF</color>
     <color name="lesson_room">#CCCCCC</color>
+    <color name="lesson_homework_title">#88FFFFFF</color>
+    <color name="lesson_homework_text">#CCFFFFFF</color>
 </resources>
