@@ -1,6 +1,7 @@
 package ru.tgmaksim.gymnasium
 
 import android.util.Log
+import android.view.View
 import android.os.Bundle
 import java.lang.Exception
 import android.widget.Toast
@@ -43,6 +44,9 @@ class MainActivity : ParentActivity() {
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
+        // Показываем, что приложение загружается
+        showLoading()
+
         // Проверяем сессию и, если надо, перенаправляем на авторизацию
         // Только после проверки сессии продолжается отрисовка
         val context: Context = this
@@ -53,7 +57,7 @@ class MainActivity : ParentActivity() {
 
                 if (!(sessionStatus.auth && sessionStatus.exists)) {
                     processed = false
-                    CacheManager.apiSession = null
+                    CacheManager.clear()
                     val intent = Intent(context, LoginActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -66,6 +70,9 @@ class MainActivity : ParentActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
+            // Завершаем загрузку приложения
+            hideLoading()
 
             if (processed) {
                 // Смена страницы меню на ранее открытую
@@ -152,4 +159,12 @@ class MainActivity : ParentActivity() {
                 else -> ScheduleFragment()
             }
         }
+
+    fun showLoading() {
+        ui.loadingOverlay.visibility = View.VISIBLE
+    }
+
+    fun hideLoading() {
+        ui.loadingOverlay.visibility = View.GONE
+    }
 }

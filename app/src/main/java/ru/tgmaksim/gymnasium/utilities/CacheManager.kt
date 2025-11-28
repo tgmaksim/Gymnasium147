@@ -18,6 +18,10 @@ object CacheManager {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
+    fun clear() {
+        prefs.all.clear()
+    }
+
     var isDarkTheme: Boolean
         get() = prefs.getBoolean(KEY_THEME, false)
         set(value) = prefs.edit { putBoolean(KEY_THEME, value) }
