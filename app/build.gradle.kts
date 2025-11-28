@@ -1,7 +1,27 @@
+import java.util.Properties
+
+// Увеличиваем номер сборки при каждой компиляции
+val versionPropsFile = rootProject.file("version.properties")
+val versionProps = Properties()
+
+if (versionPropsFile.exists()) {
+    versionProps.load(versionPropsFile.inputStream())
+}
+
+val buildNumber = versionProps.getProperty("BUILD_NUMBER", "1").toInt()
+val newBuildNumber = buildNumber + 1
+
+gradle.taskGraph.whenReady {
+    if (hasTask(":app:assembleDebug") || hasTask(":app:assembleRelease")) {
+        versionProps["BUILD_NUMBER"] = newBuildNumber.toString()
+        versionProps.store(versionPropsFile.writer(), null)
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
 }
 
 android {
@@ -14,8 +34,8 @@ android {
         applicationId = "ru.tgmaksim.gymnasium"
         minSdk = 30
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.2.1"
+        versionCode = newBuildNumber
+        versionName = "0.2.1-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,13 +49,16 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         viewBinding = true
     }
