@@ -30,12 +30,15 @@ import ru.tgmaksim.gymnasium.api.Schedules
 import ru.tgmaksim.gymnasium.api.ScheduleDay
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
+import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
 
 fun Int.dp(context: Context): Int =
     (this * context.resources.displayMetrics.density).toInt()
 
-class LessonsAdapter(private var lessons: List<Lesson>) :
+class LessonsAdapter(private var lessons: List<Lesson>,
+                     private var hoursExtracurricularActivities: String?,
+                     private var extracurricularActivities: List<ExtracurricularActivity>) :
     RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
     class LessonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -43,6 +46,7 @@ class LessonsAdapter(private var lessons: List<Lesson>) :
         val tvSubject: TextView = view.findViewById(R.id.tvSubject)
         val tvRoom: TextView = view.findViewById(R.id.tvRoom)
         val tvHomework: TextView = view.findViewById(R.id.tvHomework)
+        val tvHomeworkGroup: LinearLayout = view.findViewById(R.id.tvHomeworkGroup)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
@@ -52,22 +56,41 @@ class LessonsAdapter(private var lessons: List<Lesson>) :
     }
 
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
-        val lesson = lessons[position]
+        val lesson = if (position < lessons.size) {
+            lessons[position]
+        } else {
+            val subjects = extracurricularActivities.joinToString("\n") { it.subject }
+            val place = extracurricularActivities.joinToString("; ") { it.place }
+            Lesson(position, subjects, place, hoursExtracurricularActivities!!, null)
+        }
         holder.tvTime.text = lesson.hours
         holder.tvSubject.text = lesson.subject
         holder.tvRoom.text = lesson.place
-        if (lesson.homework.isEmpty())
-            holder.tvHomework.text = "Нет домашнего задания"
-        else
+
+        if (lesson.homework?.isEmpty() == false) {
             holder.tvHomework.text = lesson.homework
+            holder.tvHomeworkGroup.visibility = View.VISIBLE
+        }
+        else {
+            holder.tvHomework.text = "Нет домашнего задания"
+            holder.tvHomeworkGroup.visibility = View.GONE
+        }
     }
 
-    fun updateLessons(newLessons: List<Lesson>) {
+    fun updateLessons(
+        newLessons: List<Lesson>,
+        newHoursExtracurricularActivities: String?,
+        newExtracurricularActivity: List<ExtracurricularActivity>
+    ) {
         lessons = newLessons
+        hoursExtracurricularActivities = newHoursExtracurricularActivities
+        extracurricularActivities = newExtracurricularActivity
         notifyDataSetChanged()
     }
 
-    override fun getItemCount(): Int = lessons.size
+    override fun getItemCount(): Int {
+        return lessons.size + if (extracurricularActivities.isEmpty()) 0 else 1
+    }
 }
 
 class ScheduleFragment : Fragment() {
@@ -184,7 +207,11 @@ class ScheduleFragment : Fragment() {
     private fun fillDay(date: String) {
         // Первый раз инициализируем адаптер
         if (ui.rvLessons.adapter == null) {
-            ui.rvLessons.adapter = LessonsAdapter(emptyList())
+            ui.rvLessons.adapter = LessonsAdapter(
+                emptyList(),
+                null,
+                emptyList()
+            )
             ui.rvLessons.layoutManager = LinearLayoutManager(context)
         }
 
@@ -194,13 +221,21 @@ class ScheduleFragment : Fragment() {
 
         // Показываем расписание на сегодня
         var lessons: List<Lesson> = emptyList()
+        var hoursExtracurricularActivities: String? = null
+        var extracurricularActivities: List<ExtracurricularActivity> = emptyList()
         for (scheduleDay: ScheduleDay in schedule) {
             if (scheduleDay.date == date) {
                 lessons = scheduleDay.lessons
+                hoursExtracurricularActivities = scheduleDay.hoursExtracurricularActivities
+                extracurricularActivities = scheduleDay.extracurricularActivities
             }
         }
 
-        (ui.rvLessons.adapter as LessonsAdapter).updateLessons(lessons)
+        (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
+            lessons,
+            hoursExtracurricularActivities,
+            extracurricularActivities
+        )
     }
 
     private fun openDay(item: ItemDayBinding) {

@@ -15,7 +15,9 @@ data class Schedules(
 @Serializable
 data class ScheduleDay(
     val date: String,
-    val lessons: List<Lesson>
+    val lessons: List<Lesson>,
+    val hoursExtracurricularActivities: String?,
+    val extracurricularActivities: List<ExtracurricularActivity>
 )
 
 @Serializable
@@ -24,7 +26,13 @@ data class Lesson(
     val subject: String,
     val place: String,
     val hours: String,
-    val homework: String
+    val homework: String?
+)
+
+@Serializable
+data class ExtracurricularActivity(
+    val subject: String,
+    val place: String
 )
 
 object Schedule {

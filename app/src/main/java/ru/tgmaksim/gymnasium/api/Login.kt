@@ -31,7 +31,7 @@ object Login {
     }
 
     suspend fun checkSession(): SessionStatus {
-        if (CacheManager.apiSession?.isEmpty() == true)
+        if (CacheManager.apiSession?.isEmpty() != false)
             return SessionStatus(exists = false, auth = false)
         val session: String = CacheManager.apiSession.toString()
 

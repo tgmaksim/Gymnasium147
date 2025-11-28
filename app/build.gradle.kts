@@ -10,6 +10,8 @@ if (versionPropsFile.exists()) {
 }
 
 val buildNumber = versionProps.getProperty("BUILD_NUMBER", "1").toInt()
+val appVersion = versionProps.getProperty("APP_VERSION", "0.1.0")
+
 val newBuildNumber = buildNumber + 1
 
 gradle.taskGraph.whenReady {
@@ -36,7 +38,7 @@ android {
         minSdk = 30
         targetSdk = 36
         versionCode = newBuildNumber
-        versionName = "0.2.1-alpha"
+        versionName = appVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

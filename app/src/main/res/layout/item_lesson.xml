@@ -44,18 +44,33 @@
         android:fontFamily="sans-serif-medium"
         android:layout_marginTop="4dp" />
 
-    <TextView
-        android:id="@+id/tvHomework"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:text="Нет домашнего задания"
-        android:textSize="14sp"
-        android:textColor="@color/lesson_homework_text"
-        android:fontFamily="sans-serif"
-        android:layout_marginTop="2dp"
-        android:lineSpacingExtra="2dp"
-        android:maxLines="5"
-        android:ellipsize="end" />
+    <LinearLayout
+        android:id="@+id/tvHomeworkGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="✏️"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif" />
+
+        <TextView
+            android:id="@+id/tvHomework"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:text="Нет домашнего задания"
+            android:textSize="14sp"
+            android:textColor="@color/lesson_homework_text"
+            android:fontFamily="sans-serif"
+            android:layout_marginTop="2dp"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="5"
+            android:ellipsize="end" />
+
+    </LinearLayout>
 
 </LinearLayout>
