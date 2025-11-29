@@ -1,24 +1,25 @@
-package ru.tgmaksim.gymnasium
+package ru.tgmaksim.gymnasium.ui
 
-import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.os.Bundle
 import android.widget.Toast
 import android.content.Context
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 
+import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Login
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
 
 class LoginActivity : ParentActivity() {
-
     private lateinit var ui: LayoutLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         CacheManager.init(this)
 
-        // Устанавливаем сохраненную тему
+        // Устанавливается сохраненная тема
         setActivityTheme()
         super.onCreate(savedInstanceState)
 
@@ -30,6 +31,7 @@ class LoginActivity : ParentActivity() {
 
         val context: Context = this
         ui.btnLogin.setOnClickListener {
+            showLoading()
             lifecycleScope.launch {
                 try {
                     Login.login(context)
@@ -38,11 +40,31 @@ class LoginActivity : ParentActivity() {
                     Log.e("api-error", null, e)
                     Toast.makeText(
                         context,
-                        "Произошла ошибка при попытке открыть авторизоваться",
+                        R.string.error_login,
                         Toast.LENGTH_SHORT
-                    )
+                    ).show()
                 }
             }
+            hideLoading()
         }
+
+        // Заранее получается ссылка для входа
+        showLoading()
+        lifecycleScope.launch {
+            try {
+                Login.prepareLogin()
+            } catch (e: Exception) {
+                Log.e("api-error", null, e)
+            }
+        }
+        hideLoading()
+    }
+
+    private fun showLoading() {
+        ui.loadingOverlay.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        ui.loadingOverlay.visibility = View.GONE
     }
 }

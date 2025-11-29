@@ -9,36 +9,40 @@
     android:clickable="true"
     android:focusable="true">
 
+    <!-- Верхняя часть карточки: время и кабинет -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
+        <!-- Время урока -->
         <TextView
             android:id="@+id/tvTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="08:00 - 09:35"
+            android:text="@string/default_bells_schedule"
             android:textSize="14sp"
             android:textColor="@color/lesson_time"
             android:fontFamily="sans-serif-medium" />
 
+        <!-- Кабинет -->
         <TextView
             android:id="@+id/tvRoom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="101"
+            android:text="@string/default_place"
             android:textSize="14sp"
             android:textColor="@color/lesson_room"
             android:layout_marginStart="10dp" />
 
     </LinearLayout>
 
+    <!-- Название предмета -->
     <TextView
         android:id="@+id/tvSubject"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Математика"
+        android:text="@string/default_subject"
         android:textSize="18sp"
         android:textColor="@color/lesson_subject"
         android:fontFamily="sans-serif-medium"
@@ -50,25 +54,27 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
+        <!-- Эмодзи домашнего задания -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="✏️"
+            android:text="@string/default_homework_emoji"
             android:textSize="14sp"
             android:fontFamily="sans-serif" />
 
+        <!-- Текст домашнего задания -->
         <TextView
             android:id="@+id/tvHomework"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:text="Нет домашнего задания"
+            android:text="@string/homework_not_found"
             android:textSize="14sp"
             android:textColor="@color/lesson_homework_text"
             android:fontFamily="sans-serif"
             android:layout_marginTop="2dp"
             android:lineSpacingExtra="2dp"
-            android:maxLines="5"
+            android:maxLines="8"
             android:ellipsize="end" />
 
     </LinearLayout>

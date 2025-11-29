@@ -3,10 +3,10 @@ package ru.tgmaksim.gymnasium.fragment
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-
-import ru.tgmaksim.gymnasium.R
 import android.view.LayoutInflater
 import androidx.fragment.app.Fragment
+
+import ru.tgmaksim.gymnasium.R
 
 class ProfileFragment : Fragment() {
     override fun onCreateView(

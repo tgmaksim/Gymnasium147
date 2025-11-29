@@ -6,12 +6,14 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient">
 
+    <!-- Основная область приложения -->
     <FrameLayout
         android:id="@+id/content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/bottomMenu">
 
+        <!-- Кнопка дял смен темы -->
         <ImageButton
             android:id="@+id/btn_theme"
             android:layout_width="42dp"
@@ -23,8 +25,10 @@
             android:padding="6dp"
             android:contentDescription="@string/sun_text"
             android:src="@drawable/sun" />
+
     </FrameLayout>
 
+    <!-- Меню -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomMenu"
         android:layout_width="match_parent"
@@ -37,6 +41,7 @@
         app:itemIconTint="@color/bottom_nav_colors"
         app:itemTextColor="@color/bottom_nav_colors" />
 
+    <!-- Анимация загрузки -->
     <FrameLayout
         android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"

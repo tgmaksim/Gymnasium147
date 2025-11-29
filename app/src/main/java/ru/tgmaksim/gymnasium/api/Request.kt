@@ -1,20 +1,23 @@
 package ru.tgmaksim.gymnasium.api
 
-import io.ktor.http.*
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.call.body
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.util.reflect.typeInfo
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.setBody
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 
 val httpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
         json(Json {
-            ignoreUnknownKeys = true
+            ignoreUnknownKeys = true // Лишние параметры игнорируются
         })
     }
 }
@@ -26,27 +29,25 @@ data class SimpleInputData(val apiKey: String)
 data class SessionData(val apiKey: String, val session: String)
 
 object Request {
+    /** Общая функция для совершения API-запросов с помощью метода GET */
     suspend inline fun <reified TIN : Any, reified TOUT : Any> get(
         path: String,
         dataToSend: TIN
     ): TOUT {
-        val response: TOUT = httpClient.get("${Constants.DOMAIN}/$path") {
+        return httpClient.get("${Constants.DOMAIN}/$path") {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
         }.body(typeInfo<TOUT>())
-
-        return response
     }
 
+    /** Общая функция для совершения API-запросов с помощью метода POST */
     suspend inline fun <reified TIN : Any, reified TOUT : Any> post(
         path: String,
         dataToSend: TIN
     ): TOUT {
-        val response: TOUT = httpClient.post("${Constants.DOMAIN}/$path") {
+        return httpClient.post("${Constants.DOMAIN}/$path") {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
         }.body(typeInfo<TOUT>())
-
-        return response
     }
 }

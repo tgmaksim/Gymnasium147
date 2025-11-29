@@ -8,7 +8,6 @@ import java.time.LocalDate
 import android.widget.Toast
 import android.view.ViewGroup
 import android.content.Intent
-import android.content.Context
 import android.widget.TextView
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
@@ -17,9 +16,9 @@ import androidx.fragment.app.Fragment
 import android.view.animation.Animation
 import androidx.lifecycle.lifecycleScope
 import java.time.format.DateTimeFormatter
-import ru.tgmaksim.gymnasium.MainActivity
-import ru.tgmaksim.gymnasium.LoginActivity
+import ru.tgmaksim.gymnasium.ui.MainActivity
 import android.view.animation.AnimationUtils
+import ru.tgmaksim.gymnasium.ui.LoginActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
 
@@ -32,9 +31,6 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
 import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
-
-fun Int.dp(context: Context): Int =
-    (this * context.resources.displayMetrics.density).toInt()
 
 class LessonsAdapter(private var lessons: List<Lesson>,
                      private var hoursExtracurricularActivities: String?,
@@ -55,28 +51,40 @@ class LessonsAdapter(private var lessons: List<Lesson>,
         return LessonViewHolder(view)
     }
 
+    /** Создает элемент-карточку урока или внеурочки */
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
+        // Для уроков объекты уже загружены
         val lesson = if (position < lessons.size) {
             lessons[position]
-        } else {
+        } else {  // Для всех внеурочек создается один объект
             val subjects = extracurricularActivities.joinToString("\n") { it.subject }
             val place = extracurricularActivities.joinToString("; ") { it.place }
-            Lesson(position, subjects, place, hoursExtracurricularActivities!!, null)
+            Lesson(
+                position,
+                subjects,
+                place,
+                hoursExtracurricularActivities!!,
+                null
+            )
         }
+
+        // Заполняется информация в элементе
         holder.tvTime.text = lesson.hours
         holder.tvSubject.text = lesson.subject
         holder.tvRoom.text = lesson.place
 
+        // Показывается или скрывается домашнее задание
         if (lesson.homework?.isEmpty() == false) {
             holder.tvHomework.text = lesson.homework
             holder.tvHomeworkGroup.visibility = View.VISIBLE
         }
         else {
-            holder.tvHomework.text = "Нет домашнего задания"
+            holder.tvHomework.text = R.string.homework_not_found.toString()
             holder.tvHomeworkGroup.visibility = View.GONE
         }
     }
 
+    /** Обновляет расписание и показывает его */
     fun updateLessons(
         newLessons: List<Lesson>,
         newHoursExtracurricularActivities: String?,
@@ -89,6 +97,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
     }
 
     override fun getItemCount(): Int {
+        // Карточка внеурочки всегда одна, либо ее нет
         return lessons.size + if (extracurricularActivities.isEmpty()) 0 else 1
     }
 }
@@ -114,18 +123,17 @@ class ScheduleFragment : Fragment() {
     }
 
     private suspend fun init() {
-        // Если расписание еще не загружено, делаем это
+        // Загружается расписание, если оно еще не загружено
         var processed = true
         if (schedule == null) {
-            // Показываем пользователю, что расписание загружается
+            // Показывается анимация загрузки
             mainActivity.showLoading()
 
             try {
-                // Получаем расписание от сервера
                 val schedules: Schedules = Schedule.getSchedule()
 
-                // Если сессия не авторизована, то открываем Login
-                // Если произошла ошибка, выводим ее
+                // Если сессия не авторизована, то открывается Login
+                // Если произошла ошибка, выводится ошибка
                 if (!schedules.status) {
                     if (schedules.unauthorized) {
                         processed = false
@@ -135,18 +143,18 @@ class ScheduleFragment : Fragment() {
                     } else {
                         Toast.makeText(
                             context,
-                            "Произошла ошибка на сервере...",
+                            R.string.error_api,
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 } else {
-                    schedule = schedules.schedule
+                    schedule = schedules.schedule  // Сохраняем расписание
                 }
             } catch (e: Exception) {
                 Log.e("api-error", null, e)
                 Toast.makeText(
                     context,
-                    "Произошла ошибка при загрузке расписания",
+                    R.string.error_load_schedule,
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -155,8 +163,8 @@ class ScheduleFragment : Fragment() {
             mainActivity.hideLoading()
         }
 
-        // Если не получилось загрузить расписание, используем кеш
         if (processed) {
+            // Если не получилось загрузить расписание, используем кеш
             if (schedule == null)
                 schedule = Schedule.getCacheSchedule()
 
@@ -170,6 +178,7 @@ class ScheduleFragment : Fragment() {
         }
     }
 
+    /** Загрузка списка дней с датами и сокращением дня недели */
     private fun fillDays() {
         val container = ui.dayContainer
 
@@ -182,14 +191,11 @@ class ScheduleFragment : Fragment() {
             // Указываем число и день недели
             val date = today.plusDays(i.toLong())
             item.tvDayNumber.text = date.dayOfMonth.toString()
-            @Suppress("DEPRECATION")  // У Local нет России
-            val dayOfWeek = date.format(DateTimeFormatter.ofPattern("EE", Locale("ru")))
-            item.tvDayWeek.text = dayOfWeek.uppercase()
 
-            // Устанавливаем расстояние между элементами
-            val lp = item.root.layoutParams as LinearLayout.LayoutParams
-            lp.marginEnd = 14.dp(requireContext())
-            item.root.layoutParams = lp
+            @Suppress("DEPRECATION")  // У Local нет России
+            val dayOfWeek = date.format(
+                DateTimeFormatter.ofPattern("EE", Locale("ru")))
+            item.tvDayWeek.text = dayOfWeek.uppercase()
 
             // Выбираем активный день
             if (i == 0) {
@@ -204,6 +210,7 @@ class ScheduleFragment : Fragment() {
         }
     }
 
+    /** Показ расписания на данный день */
     private fun fillDay(date: String) {
         // Первый раз инициализируем адаптер
         if (ui.rvLessons.adapter == null) {
@@ -215,14 +222,14 @@ class ScheduleFragment : Fragment() {
             ui.rvLessons.layoutManager = LinearLayoutManager(context)
         }
 
-        if (schedule == null) {
+        if (schedule == null)
             return
-        }
 
-        // Показываем расписание на сегодня
         var lessons: List<Lesson> = emptyList()
         var hoursExtracurricularActivities: String? = null
         var extracurricularActivities: List<ExtracurricularActivity> = emptyList()
+
+        // Ищем нужный день в загруженном расписании
         for (scheduleDay: ScheduleDay in schedule) {
             if (scheduleDay.date == date) {
                 lessons = scheduleDay.lessons
@@ -231,6 +238,7 @@ class ScheduleFragment : Fragment() {
             }
         }
 
+        // Обновляем страницу с новыми данными
         (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
             lessons,
             hoursExtracurricularActivities,
@@ -238,6 +246,7 @@ class ScheduleFragment : Fragment() {
         )
     }
 
+    /** Открывает определенный день по нажатии на кнопку, показывая анимацию перехода */
     private fun openDay(item: ItemDayBinding) {
         val lastIndex: Int = ui.dayContainer.indexOfChild(lastSelected)
         val index: Int = ui.dayContainer.indexOfChild(item.root)
@@ -250,6 +259,7 @@ class ScheduleFragment : Fragment() {
         val date = LocalDate.now().plusDays(index.toLong())
         val format: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
 
+        // Выбираем сторону анимации
         val toRight = index > lastIndex
         val inAnim = AnimationUtils.loadAnimation(
             context,
@@ -265,11 +275,13 @@ class ScheduleFragment : Fragment() {
             override fun onAnimationRepeat(animation: Animation?) {}
 
             override fun onAnimationEnd(animation: Animation?) {
+                // Заполняем расписание
                 fillDay(date.format(format))
                 ui.rvLessons.startAnimation(inAnim)
             }
         })
 
+        // Показываем анимацию и меняем расписание
         ui.rvLessons.startAnimation(outAnim)
     }
 }

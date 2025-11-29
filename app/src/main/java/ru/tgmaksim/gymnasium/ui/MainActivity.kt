@@ -1,4 +1,4 @@
-package ru.tgmaksim.gymnasium
+package ru.tgmaksim.gymnasium.ui
 
 import android.util.Log
 import android.view.View
@@ -10,8 +10,10 @@ import android.content.Context
 import kotlinx.coroutines.launch
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 
+import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Login
 import ru.tgmaksim.gymnasium.api.SessionStatus
 import ru.tgmaksim.gymnasium.utilities.CacheManager
@@ -22,7 +24,6 @@ import ru.tgmaksim.gymnasium.fragment.SettingsFragment
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
 
 class MainActivity : ParentActivity() {
-
     private lateinit var ui: ActivityMainBinding
     private var currentTab = R.id.it_schedule
     private val fragments = mutableMapOf<Int, Fragment>()
@@ -34,7 +35,7 @@ class MainActivity : ParentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         CacheManager.init(this)
 
-        // Устанавливаем сохраненную тему
+        // Устанавливается сохраненная тема
         setActivityTheme()
         super.onCreate(savedInstanceState)
 
@@ -44,10 +45,10 @@ class MainActivity : ParentActivity() {
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
-        // Показываем, что приложение загружается
+        // Показ анимации загрузки
         showLoading()
 
-        // Проверяем сессию и, если надо, перенаправляем на авторизацию
+        // Проверяется сессия и, если надо, перенаправляется на авторизацию
         // Только после проверки сессии продолжается отрисовка
         val context: Context = this
         lifecycleScope.launch {
@@ -66,12 +67,12 @@ class MainActivity : ParentActivity() {
                 Log.e("api-error", null, e)
                 Toast.makeText(
                     context,
-                    "Произошла ошибка при загрузке приложения",
+                    R.string.error_start,
                     Toast.LENGTH_SHORT
                 ).show()
             }
 
-            // Завершаем загрузку приложения
+            // Завершается анимация загрузки
             hideLoading()
 
             if (processed) {
@@ -87,6 +88,7 @@ class MainActivity : ParentActivity() {
         }
     }
 
+    /** Настройка нажатий на кнопки меню */
     private fun setupMenuListener() {
         ui.bottomMenu.setOnItemSelectedListener { item ->
             val newFragment = newMenuPage(item.itemId)
@@ -101,24 +103,26 @@ class MainActivity : ParentActivity() {
             val oldIndex = menuIndex(currentTab)
             val newIndex = menuIndex(item.itemId)
 
-            if (newIndex > oldIndex) {
+            if (newIndex > oldIndex)
                 replaceFragment(newFragment, toRight = true)
-            } else {
+            else
                 replaceFragment(newFragment, toRight = false)
-            }
 
+            // Сохраняется открытая страница
             currentTab = item.itemId
             CacheManager.openedActivity = item.itemId
             true
         }
     }
 
+    /** Настройка нажатия на кнопку смены темы */
     private fun setupBtnThemeListener() {
         ui.btnTheme.setOnClickListener {
             val isDark = (resources.configuration.uiMode
-                    and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+                    and Configuration.UI_MODE_NIGHT_MASK) ==
+                    Configuration.UI_MODE_NIGHT_YES
 
+            // Смена темы и сохранение в кеше
             if (isDark) {
                 CacheManager.isDarkTheme = false
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -129,6 +133,7 @@ class MainActivity : ParentActivity() {
         }
     }
 
+    /** Смена страницы с анимацией перехода */
     private fun replaceFragment(fragment: Fragment, toRight: Boolean = true, animation: Boolean = true) {
         val transaction = supportFragmentManager.beginTransaction()
         if (animation) {
@@ -140,15 +145,17 @@ class MainActivity : ParentActivity() {
         transaction.replace(R.id.content_container, fragment).commit()
     }
 
+    /** Получение идентификатора страницы */
     private fun menuIndex(id: Int): Int =
         when(id) {
             R.id.it_schedule -> 0
             R.id.it_actions -> 1
             R.id.it_profile -> 2
             R.id.it_settings -> 3
-            else -> 0
+            else -> 0  // По умолчанию страница с расписанием
         }
 
+    /** Открытие страницы или создание новой */
     private fun newMenuPage(itemId: Int): Fragment =
         fragments.getOrPut(itemId) {
             when(itemId) {
@@ -160,10 +167,12 @@ class MainActivity : ParentActivity() {
             }
         }
 
+    /** Показ анимации загрузки */
     fun showLoading() {
         ui.loadingOverlay.visibility = View.VISIBLE
     }
 
+    /** Скрытие анимации загрузки */
     fun hideLoading() {
         ui.loadingOverlay.visibility = View.GONE
     }

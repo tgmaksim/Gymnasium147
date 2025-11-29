@@ -20,7 +20,7 @@
             android:layout_height="120dp"
             android:src="@mipmap/ic_launcher_foreground"
             android:contentDescription="@string/app_name"
-            android:layout_marginTop="60dp"/>
+            android:layout_marginTop="60dp" />
 
         <!-- Название приложения -->
         <TextView
@@ -31,7 +31,7 @@
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="16dp"/>
+            android:layout_marginTop="16dp" />
 
         <!-- Пояснительный текст -->
         <TextView
@@ -43,7 +43,7 @@
             android:textColor="@color/text_primary"
             android:layout_marginTop="24dp"
             android:lineSpacingExtra="4dp"
-            android:gravity="center"/>
+            android:gravity="center" />
 
         <!-- Кнопка входа через Дневник.ру -->
         <LinearLayout
@@ -58,19 +58,36 @@
             android:clickable="true"
             android:focusable="true">
 
+            <!-- Логотип дневника.ру -->
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@mipmap/logo_dnevnik"
-                android:contentDescription="дневник"/>
+                android:contentDescription="@string/dnevnik_text" />
 
+            <!-- Текст кнопки -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Войти через Дневник.ру"
+                android:text="@string/login_with_dnevnik"
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
-                android:layout_marginStart="12dp"/>
+                android:layout_marginStart="12dp" />
+
+            <!-- Анимация загрузки -->
+            <FrameLayout
+                android:id="@+id/loadingOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center" />
+
+            </FrameLayout>
+
         </LinearLayout>
 
     </LinearLayout>

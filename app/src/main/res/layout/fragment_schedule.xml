@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:paddingTop="10dp">
 
+    <!-- Название страницы -->
     <TextView
         android:id="@+id/tvSchedule"
         android:layout_width="wrap_content"
@@ -15,8 +16,8 @@
         android:fontFamily="sans-serif-medium"
         android:textColor="@color/text_primary" />
 
+    <!-- Список дней с горизонтальной прокруткой -->
     <HorizontalScrollView
-        android:id="@+id/dayScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
@@ -33,6 +34,7 @@
 
     </HorizontalScrollView>
 
+    <!-- Список уроков с вертикальной прокруткой -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvLessons"
         android:layout_width="match_parent"
@@ -41,6 +43,6 @@
         android:layout_gravity="bottom"
         android:clipToPadding="false"
         android:paddingBottom="8dp"
-        android:scrollbars="none"/>
+        android:scrollbars="none" />
 
 </LinearLayout>

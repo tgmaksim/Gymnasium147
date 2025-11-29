@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.core.content.ContextCompat.startActivity
 
 object Utilities {
+    /** Открывает ссылку в браузере */
     fun openUrl(context: Context, url: String) {
         try {
             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))

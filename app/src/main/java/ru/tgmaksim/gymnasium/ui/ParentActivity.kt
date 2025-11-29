@@ -1,4 +1,4 @@
-package ru.tgmaksim.gymnasium
+package ru.tgmaksim.gymnasium.ui
 
 import android.os.Build
 import android.view.ViewGroup
@@ -10,20 +10,23 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import ru.tgmaksim.gymnasium.R
 
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
+/** Общий класс для всех Activity */
 open class ParentActivity : AppCompatActivity() {
+    /** Смена темы приложения на сохраненную в кеше */
     fun setActivityTheme() {
-        if (CacheManager.isDarkTheme) {
+        if (CacheManager.isDarkTheme)
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
+        else
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
 
         setTheme(R.style.Theme_Gymnasium)
     }
 
+    /** Настройка системных краев (верхнего и нижнего) */
     fun setupSystemBars(contentContainer: ViewGroup) {
         // Установка отступа сверху на высоту системной панели
         ViewCompat.setOnApplyWindowInsetsListener(contentContainer) { v, insets ->
@@ -37,7 +40,6 @@ open class ParentActivity : AppCompatActivity() {
                     topMargin = topInset
                 }
             }
-
 
             insets
         }

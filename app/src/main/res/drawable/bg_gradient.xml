@@ -7,4 +7,5 @@
         android:centerColor="@color/bg_gradient_center"
         android:endColor="@color/bg_gradient_end"
         android:angle="45" />
+
 </shape>

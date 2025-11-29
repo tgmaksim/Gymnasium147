@@ -2,6 +2,7 @@ package ru.tgmaksim.gymnasium.api
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
+
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
 @Serializable
@@ -38,6 +39,7 @@ data class ExtracurricularActivity(
 object Schedule {
     const val PATH_GET_SCHEDULE = "getSchedule"
 
+    /** Получает расписания на две недели (15 дней) */
     suspend fun getSchedule() : Schedules {
         val result: Schedules = Request.get<SessionData, Schedules> (
             PATH_GET_SCHEDULE,
@@ -53,9 +55,17 @@ object Schedule {
         return result
     }
 
+    /** Загружает расписание из кеша, если ранее оно было сохранено */
     fun getCacheSchedule() : List<ScheduleDay> {
-        if (CacheManager.schedule != null)
-            return Json.decodeFromString<List<ScheduleDay>>(CacheManager.schedule!!)
+        val schedule = CacheManager.schedule
+        if (schedule != null) {
+            // Если формат расписания был изменен возникнет ошибка
+            try {
+                return Json.decodeFromString<List<ScheduleDay>>(schedule)
+            } catch (_: Exception) {
+                CacheManager.schedule = null
+            }
+        }
 
         return emptyList()
     }
