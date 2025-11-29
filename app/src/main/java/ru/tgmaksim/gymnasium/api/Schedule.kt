@@ -27,13 +27,20 @@ data class Lesson(
     val subject: String,
     val place: String,
     val hours: String,
-    val homework: String?
+    val homework: String? = null,
+    val files: List<HomeworkDocument> = emptyList()
 )
 
 @Serializable
 data class ExtracurricularActivity(
     val subject: String,
     val place: String
+)
+
+@Serializable
+data class HomeworkDocument(
+    val fileName: String,
+    val downloadUrl: String
 )
 
 object Schedule {

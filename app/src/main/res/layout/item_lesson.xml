@@ -58,7 +58,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="@string/default_homework_emoji"
+            android:text="@string/homework_emoji"
             android:textSize="14sp"
             android:fontFamily="sans-serif" />
 
@@ -74,9 +74,15 @@
             android:fontFamily="sans-serif"
             android:layout_marginTop="2dp"
             android:lineSpacingExtra="2dp"
-            android:maxLines="8"
+            android:maxLines="10"
             android:ellipsize="end" />
 
     </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tvFilesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
 
 </LinearLayout>

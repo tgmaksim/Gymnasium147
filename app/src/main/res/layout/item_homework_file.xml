@@ -1,0 +1,30 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvHomeworkDocumentGroup"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <!-- Эмодзи скрепки -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="@string/homework_document_emoji"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif" />
+
+    <!-- Название документа -->
+    <TextView
+        android:id="@+id/homeworkDocumentName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:text="@string/homework_document_not_found"
+        android:textSize="14sp"
+        android:textColorLink="@color/lesson_homework_file_name"
+        android:fontFamily="sans-serif"
+        android:layout_marginTop="2dp"
+        android:lineSpacingExtra="2dp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+</LinearLayout>

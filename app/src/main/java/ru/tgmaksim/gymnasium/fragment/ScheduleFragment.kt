@@ -12,12 +12,15 @@ import android.widget.TextView
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
 import android.widget.LinearLayout
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import android.view.animation.Animation
 import androidx.lifecycle.lifecycleScope
 import java.time.format.DateTimeFormatter
+import androidx.core.content.ContextCompat
 import ru.tgmaksim.gymnasium.ui.MainActivity
 import android.view.animation.AnimationUtils
+import android.text.method.LinkMovementMethod
 import ru.tgmaksim.gymnasium.ui.LoginActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -27,6 +30,7 @@ import ru.tgmaksim.gymnasium.api.Lesson
 import ru.tgmaksim.gymnasium.api.Schedule
 import ru.tgmaksim.gymnasium.api.Schedules
 import ru.tgmaksim.gymnasium.api.ScheduleDay
+import ru.tgmaksim.gymnasium.api.HomeworkDocument
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
 import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
@@ -37,12 +41,13 @@ class LessonsAdapter(private var lessons: List<Lesson>,
                      private var extracurricularActivities: List<ExtracurricularActivity>) :
     RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
-    class LessonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    class LessonViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
         val tvTime: TextView = view.findViewById(R.id.tvTime)
         val tvSubject: TextView = view.findViewById(R.id.tvSubject)
         val tvRoom: TextView = view.findViewById(R.id.tvRoom)
         val tvHomework: TextView = view.findViewById(R.id.tvHomework)
         val tvHomeworkGroup: LinearLayout = view.findViewById(R.id.tvHomeworkGroup)
+        val tvFilesContainer: LinearLayout = view.findViewById(R.id.tvFilesContainer)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
@@ -56,15 +61,19 @@ class LessonsAdapter(private var lessons: List<Lesson>,
         // Для уроков объекты уже загружены
         val lesson = if (position < lessons.size) {
             lessons[position]
-        } else {  // Для всех внеурочек создается один объект
+        } else {
+            // Выделение фона другим цветом
+            holder.view.background = ContextCompat.getDrawable(
+                holder.view.context, R.drawable.bg_lesson_extra)
+
+            // Для всех внеурочек создается один объект
             val subjects = extracurricularActivities.joinToString("\n") { it.subject }
             val place = extracurricularActivities.joinToString("; ") { it.place }
             Lesson(
                 position,
                 subjects,
                 place,
-                hoursExtracurricularActivities!!,
-                null
+                hoursExtracurricularActivities!!
             )
         }
 
@@ -81,6 +90,28 @@ class LessonsAdapter(private var lessons: List<Lesson>,
         else {
             holder.tvHomework.text = R.string.homework_not_found.toString()
             holder.tvHomeworkGroup.visibility = View.GONE
+        }
+
+        // Строка с гиперсылкой на ресурс
+        val view = LayoutInflater.from(holder.view.context).inflate(
+            R.layout.item_homework_file,
+            holder.tvFilesContainer,
+            false
+        ) as LinearLayout
+        holder.tvFilesContainer.removeAllViews()
+
+        // Добавление прикрепленных файлов к уроку
+        for (file: HomeworkDocument in lesson.files) {
+            val fileName: TextView = view.findViewById(R.id.homeworkDocumentName)
+            val htmlString = "<a href=\"${file.downloadUrl}\">${file.fileName}</a>"
+            val styledText = HtmlCompat.fromHtml(
+                htmlString,
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
+
+            fileName.text = styledText
+            fileName.movementMethod = LinkMovementMethod.getInstance()
+            holder.tvFilesContainer.addView(view)
         }
     }
 

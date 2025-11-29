@@ -14,8 +14,10 @@
     <string name="default_bells_schedule">08:00 - 09:35</string>
     <string name="default_place">101</string>
     <string name="default_subject">Математика</string>
-    <string name="default_homework_emoji">✏️</string>
+    <string name="homework_emoji">✏️</string>
+    <string name="homework_document_emoji">📎</string>
     <string name="homework_not_found">Нет домашнего задания</string>
+    <string name="homework_document_not_found">Нет дополнительных ресурсов</string>
     <string name="default_day_number">1</string>
     <string name="default_weekday">ПН</string>
     <string name="dnevnik_text">Дневник</string>
