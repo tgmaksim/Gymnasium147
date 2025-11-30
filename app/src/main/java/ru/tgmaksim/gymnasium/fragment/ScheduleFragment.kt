@@ -261,7 +261,7 @@ class ScheduleFragment : Fragment() {
                 if (event.action == MotionEvent.ACTION_UP) {
                     v.performClick()
                 }
-                true
+                false
             }
             @SuppressLint("ClickableViewAccessibility")
             ui.weekendPhoto.setOnTouchListener { v, event ->
