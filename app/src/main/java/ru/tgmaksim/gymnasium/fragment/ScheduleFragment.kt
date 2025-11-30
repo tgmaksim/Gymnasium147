@@ -17,6 +17,7 @@ import android.widget.LinearLayout
 import android.view.GestureDetector
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import android.annotation.SuppressLint
 import android.view.animation.Animation
 import androidx.lifecycle.lifecycleScope
 import java.time.format.DateTimeFormatter
@@ -124,6 +125,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
     }
 
     /** Обновляет расписание и показывает его */
+    @SuppressLint("NotifyDataSetChanged")
     fun updateLessons(
         newLessons: List<Lesson>,
         newHoursExtracurricularActivities: String?,
@@ -146,6 +148,7 @@ class ScheduleFragment : Fragment() {
     private lateinit var lastSelected: LinearLayout
     private var schedule: List<ScheduleDay>? = null
     private lateinit var mainActivity: MainActivity
+    @Suppress("DEPRECATION")
     private lateinit var gestureDetector: GestureDetectorCompat
 
     override fun onCreateView(
@@ -156,6 +159,7 @@ class ScheduleFragment : Fragment() {
         mainActivity = activity as MainActivity
 
         // Обработчик пролистывания дней
+        @Suppress("DEPRECATION")
         gestureDetector = GestureDetectorCompat(requireContext(),
             object : GestureDetector.SimpleOnGestureListener() {
             private val SWIPE_THRESHOLD = 80     // минимальная дистанция
@@ -246,17 +250,25 @@ class ScheduleFragment : Fragment() {
             fillDays()
 
             // Показываем расписание на сегодня
-            val format: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
+            val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
             val date: String = LocalDate.now().format(format)
             fillDay(date)
 
             // Пролистывание доступно на списке уроков и фото выходных
-            ui.rvLessons.setOnTouchListener { _, event ->
+            @SuppressLint("ClickableViewAccessibility")
+            ui.rvLessons.setOnTouchListener { v, event ->
                 gestureDetector.onTouchEvent(event)
+                if (event.action == MotionEvent.ACTION_UP) {
+                    v.performClick()
+                }
                 true
             }
-            ui.weekendPhoto.setOnTouchListener { _, event ->
+            @SuppressLint("ClickableViewAccessibility")
+            ui.weekendPhoto.setOnTouchListener { v, event ->
                 gestureDetector.onTouchEvent(event)
+                if (event.action == MotionEvent.ACTION_UP) {
+                    v.performClick()
+                }
                 true
             }
         }
@@ -369,7 +381,8 @@ class ScheduleFragment : Fragment() {
         lastSelected = item
 
         val date = LocalDate.now().plusDays(index.toLong())
-        val format: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
+        val lastDate = LocalDate.now().plusDays(lastIndex.toLong())
+        val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         // Выбираем сторону анимации
         val toRight = index > lastIndex
@@ -383,6 +396,7 @@ class ScheduleFragment : Fragment() {
         )
 
         val lessons = searchScheduleDay(date.format(format))?.lessons
+        val lastLessons = searchScheduleDay(lastDate.format(format))?.lessons
 
         outAnim.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation?) {}
@@ -396,7 +410,10 @@ class ScheduleFragment : Fragment() {
             }
         })
 
-        // Показываем анимацию и меняем расписание
-        ui.rvLessons.startAnimation(outAnim)
+        if (lastLessons?.isEmpty() == true && lessons?.isEmpty() == true)
+            fillDay(date.format(format))
+        else
+            // Показ анимации и смена расписания
+            ui.rvLessons.startAnimation(outAnim)
     }
 }
