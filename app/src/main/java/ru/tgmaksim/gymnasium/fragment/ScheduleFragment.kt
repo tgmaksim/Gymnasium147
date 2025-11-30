@@ -1,5 +1,6 @@
 package ru.tgmaksim.gymnasium.fragment
 
+import kotlin.math.abs
 import java.util.Locale
 import android.util.Log
 import android.os.Bundle
@@ -9,9 +10,11 @@ import android.widget.Toast
 import android.view.ViewGroup
 import android.content.Intent
 import android.widget.TextView
+import android.view.MotionEvent
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
 import android.widget.LinearLayout
+import android.view.GestureDetector
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import android.view.animation.Animation
@@ -22,6 +25,7 @@ import ru.tgmaksim.gymnasium.ui.MainActivity
 import android.view.animation.AnimationUtils
 import android.text.method.LinkMovementMethod
 import ru.tgmaksim.gymnasium.ui.LoginActivity
+import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
 
@@ -60,6 +64,10 @@ class LessonsAdapter(private var lessons: List<Lesson>,
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
         // Для уроков объекты уже загружены
         val lesson = if (position < lessons.size) {
+            // Возвращение цвета
+            holder.view.background = ContextCompat.getDrawable(
+                holder.view.context, R.drawable.bg_lesson_glass)
+
             lessons[position]
         } else {
             // Выделение фона другим цветом
@@ -138,6 +146,7 @@ class ScheduleFragment : Fragment() {
     private lateinit var lastSelected: LinearLayout
     private var schedule: List<ScheduleDay>? = null
     private lateinit var mainActivity: MainActivity
+    private lateinit var gestureDetector: GestureDetectorCompat
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -145,6 +154,40 @@ class ScheduleFragment : Fragment() {
     ): View {
         ui = FragmentScheduleBinding.inflate(inflater, container, false)
         mainActivity = activity as MainActivity
+
+        // Обработчик пролистывания дней
+        gestureDetector = GestureDetectorCompat(requireContext(),
+            object : GestureDetector.SimpleOnGestureListener() {
+            private val SWIPE_THRESHOLD = 80     // минимальная дистанция
+            private val SWIPE_VELOCITY = 80      // минимальная скорость
+
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                if (e1 == null)
+                    return false
+                val diffX = e2.x - e1.x
+
+                if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY) {
+                    val index = ui.dayContainer.indexOfChild(lastSelected)
+
+                    return if (diffX < 0 && index + 1 < 15) {
+                        openDay(ui.dayContainer.getChildAt(index + 1) as LinearLayout)
+                        true
+                    } else if (diffX > 0 && index - 1 >= 0) {
+                        openDay(ui.dayContainer.getChildAt(index - 1) as LinearLayout)
+                        true
+                    } else {
+                        false
+                    }
+                }
+
+                return false
+            }
+        })
 
         lifecycleScope.launch {
             init()
@@ -206,6 +249,16 @@ class ScheduleFragment : Fragment() {
             val format: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
             val date: String = LocalDate.now().format(format)
             fillDay(date)
+
+            // Пролистывание доступно на списке уроков и фото выходных
+            ui.rvLessons.setOnTouchListener { _, event ->
+                gestureDetector.onTouchEvent(event)
+                true
+            }
+            ui.weekendPhoto.setOnTouchListener { _, event ->
+                gestureDetector.onTouchEvent(event)
+                true
+            }
         }
     }
 
@@ -235,7 +288,7 @@ class ScheduleFragment : Fragment() {
             }
 
             // Определяем действие при нажатии
-            item.root.setOnClickListener { openDay(item) }
+            item.root.setOnClickListener { openDay(item.root) }
 
             container.addView(item.root)
         }
@@ -261,31 +314,59 @@ class ScheduleFragment : Fragment() {
         var extracurricularActivities: List<ExtracurricularActivity> = emptyList()
 
         // Ищем нужный день в загруженном расписании
+        val scheduleDay: ScheduleDay? = searchScheduleDay(date)
+        if (scheduleDay != null) {
+            lessons = scheduleDay.lessons
+            hoursExtracurricularActivities = scheduleDay.hoursExtracurricularActivities
+            extracurricularActivities = scheduleDay.extracurricularActivities
+        }
+
+        if (lessons.isEmpty() && scheduleDay != null) {
+            // Обновляем страницу с новыми данными
+            (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
+                lessons,
+                hoursExtracurricularActivities,
+                extracurricularActivities
+            )
+
+            ui.rvLessons.visibility = View.GONE
+            ui.weekendPhoto.visibility = View.VISIBLE
+        }
+        else {
+            ui.rvLessons.visibility = View.VISIBLE
+            ui.weekendPhoto.visibility = View.GONE
+
+            // Обновляем страницу с новыми данными
+            (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
+                lessons,
+                hoursExtracurricularActivities,
+                extracurricularActivities
+            )
+        }
+    }
+
+    private fun searchScheduleDay(date: String): ScheduleDay? {
+        if (schedule == null)
+            return null
+
         for (scheduleDay: ScheduleDay in schedule) {
             if (scheduleDay.date == date) {
-                lessons = scheduleDay.lessons
-                hoursExtracurricularActivities = scheduleDay.hoursExtracurricularActivities
-                extracurricularActivities = scheduleDay.extracurricularActivities
+                return scheduleDay
             }
         }
 
-        // Обновляем страницу с новыми данными
-        (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
-            lessons,
-            hoursExtracurricularActivities,
-            extracurricularActivities
-        )
+        return null
     }
 
     /** Открывает определенный день по нажатии на кнопку, показывая анимацию перехода */
-    private fun openDay(item: ItemDayBinding) {
+    private fun openDay(item: LinearLayout) {
         val lastIndex: Int = ui.dayContainer.indexOfChild(lastSelected)
-        val index: Int = ui.dayContainer.indexOfChild(item.root)
+        val index: Int = ui.dayContainer.indexOfChild(item)
 
         // Обновляем выделение
         lastSelected.isSelected = false
-        item.root.isSelected = true
-        lastSelected = item.root
+        item.isSelected = true
+        lastSelected = item
 
         val date = LocalDate.now().plusDays(index.toLong())
         val format: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
@@ -301,6 +382,8 @@ class ScheduleFragment : Fragment() {
             if (toRight) R.anim.slide_out_left else R.anim.slide_out_right
         )
 
+        val lessons = searchScheduleDay(date.format(format))?.lessons
+
         outAnim.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation?) {}
             override fun onAnimationRepeat(animation: Animation?) {}
@@ -308,7 +391,8 @@ class ScheduleFragment : Fragment() {
             override fun onAnimationEnd(animation: Animation?) {
                 // Заполняем расписание
                 fillDay(date.format(format))
-                ui.rvLessons.startAnimation(inAnim)
+                if (lessons?.isEmpty() != true)
+                    ui.rvLessons.startAnimation(inAnim)
             }
         })
 
