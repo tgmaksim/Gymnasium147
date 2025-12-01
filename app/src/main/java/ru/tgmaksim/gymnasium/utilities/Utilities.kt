@@ -12,14 +12,20 @@ object Utilities {
     fun openUrl(context: Context, url: String) {
         try {
             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            @Suppress("DEPRECATION")
             startActivity(context, browserIntent, null)
         } catch (e: android.content.ActivityNotFoundException) {
             Log.e("android-error", null, e)
-            Toast.makeText(
-                context,
-                "Не найдено приложение для открытия веб-страницы",
-                Toast.LENGTH_SHORT
-            ).show()
+            showText(context, "Не найдено приложение для открытия веб-страницы")
         }
+    }
+
+    /** Показ уведомлений */
+    fun showText(context: Context, text: String) {
+        Toast.makeText(
+            context,
+            text,
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }

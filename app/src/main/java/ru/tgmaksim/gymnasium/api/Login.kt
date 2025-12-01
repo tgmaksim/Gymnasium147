@@ -25,10 +25,18 @@ object Login {
         if (loginUrl != null)
             return loginUrl!!
 
-        val loginUrl: LoginUrl = Request.post<SimpleInputData, LoginUrl>(
-            PATH_LOGIN,
-            SimpleInputData(Constants.API_KEY)
-        )
+        val loginUrl = if (CacheManager.apiSession == null) {
+            Request.post<SimpleInputData, LoginUrl>(
+                PATH_LOGIN,
+                SimpleInputData(Constants.API_KEY)
+            )
+        } else {
+            Request.post<SessionData, LoginUrl>(
+                PATH_LOGIN,
+                SessionData(Constants.API_KEY, CacheManager.apiSession!!)
+            )
+        }
+
         CacheManager.apiSession = loginUrl.session
         return loginUrl.loginUrl
     }

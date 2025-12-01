@@ -6,6 +6,7 @@ import android.util.Log
 import android.os.Bundle
 import android.view.View
 import java.time.LocalDate
+import java.time.LocalTime
 import android.widget.Toast
 import android.view.ViewGroup
 import android.content.Intent
@@ -36,7 +37,6 @@ import ru.tgmaksim.gymnasium.api.Schedule
 import ru.tgmaksim.gymnasium.api.Schedules
 import ru.tgmaksim.gymnasium.api.ScheduleDay
 import ru.tgmaksim.gymnasium.api.HomeworkDocument
-import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
 import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
@@ -162,7 +162,7 @@ class ScheduleFragment : Fragment() {
         @Suppress("DEPRECATION")
         gestureDetector = GestureDetectorCompat(requireContext(),
             object : GestureDetector.SimpleOnGestureListener() {
-            private val SWIPE_THRESHOLD = 80     // минимальная дистанция
+            private val SWIPE_THRESHOLD = 50     // минимальная дистанция
             private val SWIPE_VELOCITY = 80      // минимальная скорость
 
             override fun onFling(
@@ -215,7 +215,6 @@ class ScheduleFragment : Fragment() {
                 if (!schedules.status) {
                     if (schedules.unauthorized) {
                         processed = false
-                        CacheManager.clear()
                         val intent = Intent(context, LoginActivity::class.java)
                         startActivity(intent)
                     } else {
@@ -226,7 +225,7 @@ class ScheduleFragment : Fragment() {
                         ).show()
                     }
                 } else {
-                    schedule = schedules.schedule  // Сохраняем расписание
+                    schedule = schedules.schedule  // Сохранение расписания
                 }
             } catch (e: Exception) {
                 Log.e("api-error", null, e)
@@ -237,22 +236,26 @@ class ScheduleFragment : Fragment() {
                 ).show()
             }
 
-            // Завершаем загрузку расписания
+            // Завершение загрузку расписания
             mainActivity.hideLoading()
         }
 
         if (processed) {
-            // Если не получилось загрузить расписание, используем кеш
+            // Если не получилось загрузить расписание, загрузка из кеша
             if (schedule == null)
                 schedule = Schedule.getCacheSchedule()
 
-            // Отображаем даты на две недели (15 дней)
+            // Отображение даты на две недели (15 дней)
             fillDays()
 
-            // Показываем расписание на сегодня
+            // Показ расписания на сегодня или завтра
             val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-            val date: String = LocalDate.now().format(format)
-            fillDay(date)
+            val date = if (LocalTime.now().hour >= 15) {
+                LocalDate.now().plusDays(1)
+            } else {
+                LocalDate.now()
+            }
+            fillDay(date.format(format))
 
             // Пролистывание доступно на списке уроков и фото выходных
             @SuppressLint("ClickableViewAccessibility")
@@ -279,12 +282,13 @@ class ScheduleFragment : Fragment() {
         val container = ui.dayContainer
 
         val today = LocalDate.now()
+        val time = LocalTime.now()
 
         repeat(15) { i ->  // Заполнение дней на две недели (15 дней)
             val item = ItemDayBinding.inflate(layoutInflater, container, false)
             item.root.setBackgroundResource(R.drawable.bg_day_selector)
 
-            // Указываем число и день недели
+            // Число и день недели
             val date = today.plusDays(i.toLong())
             item.tvDayNumber.text = date.dayOfMonth.toString()
 
@@ -293,13 +297,13 @@ class ScheduleFragment : Fragment() {
                 DateTimeFormatter.ofPattern("EE", Locale("ru")))
             item.tvDayWeek.text = dayOfWeek.uppercase()
 
-            // Выбираем активный день
-            if (i == 0) {
+            // Выбор активного дня: до 15:00 - текущий, после - следующий
+            if (i == 0 && time.hour < 15 || i == 1 && time.hour >= 15) {
                 item.root.isSelected = true
                 lastSelected = item.root
             }
 
-            // Определяем действие при нажатии
+            // Определение действия при нажатии
             item.root.setOnClickListener { openDay(item.root) }
 
             container.addView(item.root)
@@ -308,7 +312,7 @@ class ScheduleFragment : Fragment() {
 
     /** Показ расписания на данный день */
     private fun fillDay(date: String) {
-        // Первый раз инициализируем адаптер
+        // Первый раз инициализация адаптера
         if (ui.rvLessons.adapter == null) {
             ui.rvLessons.adapter = LessonsAdapter(
                 emptyList(),
@@ -325,7 +329,7 @@ class ScheduleFragment : Fragment() {
         var hoursExtracurricularActivities: String? = null
         var extracurricularActivities: List<ExtracurricularActivity> = emptyList()
 
-        // Ищем нужный день в загруженном расписании
+        // Поиск нужного дня в загруженном расписании
         val scheduleDay: ScheduleDay? = searchScheduleDay(date)
         if (scheduleDay != null) {
             lessons = scheduleDay.lessons
@@ -334,7 +338,7 @@ class ScheduleFragment : Fragment() {
         }
 
         if (lessons.isEmpty() && scheduleDay != null) {
-            // Обновляем страницу с новыми данными
+            // Обновление страницы с новыми данными
             (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
                 lessons,
                 hoursExtracurricularActivities,
@@ -348,7 +352,7 @@ class ScheduleFragment : Fragment() {
             ui.rvLessons.visibility = View.VISIBLE
             ui.weekendPhoto.visibility = View.GONE
 
-            // Обновляем страницу с новыми данными
+            // Обновление страницу с новыми данными
             (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
                 lessons,
                 hoursExtracurricularActivities,
@@ -375,16 +379,22 @@ class ScheduleFragment : Fragment() {
         val lastIndex: Int = ui.dayContainer.indexOfChild(lastSelected)
         val index: Int = ui.dayContainer.indexOfChild(item)
 
-        // Обновляем выделение
+        // Обновление выделения
         lastSelected.isSelected = false
         item.isSelected = true
         lastSelected = item
+
+        // Центрирование кнопки текущего дня
+        ui.dayScroll.post {
+            val scrollTo = item.left - (ui.dayScroll.width - item.width) / 2
+            ui.dayScroll.smoothScrollTo(scrollTo, 0)
+        }
 
         val date = LocalDate.now().plusDays(index.toLong())
         val lastDate = LocalDate.now().plusDays(lastIndex.toLong())
         val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-        // Выбираем сторону анимации
+        // Выбор стороны анимации
         val toRight = index > lastIndex
         val inAnim = AnimationUtils.loadAnimation(
             context,
@@ -403,7 +413,7 @@ class ScheduleFragment : Fragment() {
             override fun onAnimationRepeat(animation: Animation?) {}
 
             override fun onAnimationEnd(animation: Animation?) {
-                // Заполняем расписание
+                // Заполнение расписания
                 fillDay(date.format(format))
                 if (lessons?.isEmpty() != true)
                     ui.rvLessons.startAnimation(inAnim)

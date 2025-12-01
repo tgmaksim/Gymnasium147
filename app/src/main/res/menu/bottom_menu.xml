@@ -7,14 +7,14 @@
         android:title="@string/menu_item_schedule" />
 
     <item
-        android:id="@+id/it_actions"
-        android:icon="@drawable/actions"
-        android:title="@string/menu_item_actions" />
+        android:id="@+id/it_marks"
+        android:icon="@drawable/marks"
+        android:title="@string/menu_item_marks" />
 
     <item
-        android:id="@+id/it_profile"
-        android:icon="@drawable/profile"
-        android:title="@string/menu_item_profile" />
+        android:id="@+id/it_school"
+        android:icon="@drawable/school"
+        android:title="@string/menu_item_school" />
 
     <item
         android:id="@+id/it_settings"

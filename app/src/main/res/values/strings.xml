@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Гимназия №147</string>
     <string name="menu_item_schedule">Расписание</string>
-    <string name="menu_item_profile">Профиль</string>
+    <string name="menu_item_marks">Оценки</string>
+    <string name="menu_item_school">Школа</string>
     <string name="menu_item_settings">Настройки</string>
-    <string name="menu_item_actions">Мероприятия</string>
     <string name="sun_text">Тема</string>
 
     <string name="error_start">Произошла ошибка при запуске приложения</string>

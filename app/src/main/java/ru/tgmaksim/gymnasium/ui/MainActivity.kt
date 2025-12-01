@@ -17,8 +17,8 @@ import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Login
 import ru.tgmaksim.gymnasium.api.SessionStatus
 import ru.tgmaksim.gymnasium.utilities.CacheManager
-import ru.tgmaksim.gymnasium.fragment.ActionsFragment
-import ru.tgmaksim.gymnasium.fragment.ProfileFragment
+import ru.tgmaksim.gymnasium.fragment.MarksFragment
+import ru.tgmaksim.gymnasium.fragment.SchoolFragment
 import ru.tgmaksim.gymnasium.fragment.ScheduleFragment
 import ru.tgmaksim.gymnasium.fragment.SettingsFragment
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
@@ -58,7 +58,6 @@ class MainActivity : ParentActivity() {
 
                 if (!(sessionStatus.auth && sessionStatus.exists)) {
                     processed = false
-                    CacheManager.clear()
                     val intent = Intent(context, LoginActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -149,8 +148,8 @@ class MainActivity : ParentActivity() {
     private fun menuIndex(id: Int): Int =
         when(id) {
             R.id.it_schedule -> 0
-            R.id.it_actions -> 1
-            R.id.it_profile -> 2
+            R.id.it_marks -> 1
+            R.id.it_school -> 2
             R.id.it_settings -> 3
             else -> 0  // По умолчанию страница с расписанием
         }
@@ -160,8 +159,8 @@ class MainActivity : ParentActivity() {
         fragments.getOrPut(itemId) {
             when(itemId) {
                 R.id.it_schedule -> ScheduleFragment()
-                R.id.it_actions -> ActionsFragment()
-                R.id.it_profile -> ProfileFragment()
+                R.id.it_marks -> MarksFragment()
+                R.id.it_school -> SchoolFragment()
                 R.id.it_settings -> SettingsFragment()
                 else -> ScheduleFragment()
             }
