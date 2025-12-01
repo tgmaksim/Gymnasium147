@@ -68,7 +68,8 @@ object Schedule {
         if (schedule != null) {
             // Если формат расписания был изменен возникнет ошибка
             try {
-                return Json.decodeFromString<List<ScheduleDay>>(schedule)
+                val json = Json { ignoreUnknownKeys = true }
+                return json.decodeFromString<List<ScheduleDay>>(schedule)
             } catch (_: Exception) {
                 CacheManager.schedule = null
             }

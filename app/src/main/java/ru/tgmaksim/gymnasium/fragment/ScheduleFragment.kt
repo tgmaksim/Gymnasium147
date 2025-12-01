@@ -150,6 +150,7 @@ class ScheduleFragment : Fragment() {
     private lateinit var mainActivity: MainActivity
     @Suppress("DEPRECATION")
     private lateinit var gestureDetector: GestureDetectorCompat
+    private val dateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -158,123 +159,129 @@ class ScheduleFragment : Fragment() {
         ui = FragmentScheduleBinding.inflate(inflater, container, false)
         mainActivity = activity as MainActivity
 
-        // Обработчик пролистывания дней
-        @Suppress("DEPRECATION")
-        gestureDetector = GestureDetectorCompat(requireContext(),
-            object : GestureDetector.SimpleOnGestureListener() {
-            private val SWIPE_THRESHOLD = 50     // минимальная дистанция
-            private val SWIPE_VELOCITY = 80      // минимальная скорость
-
-            override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
-            ): Boolean {
-                if (e1 == null)
-                    return false
-                val diffX = e2.x - e1.x
-
-                if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY) {
-                    val index = ui.dayContainer.indexOfChild(lastSelected)
-
-                    return if (diffX < 0 && index + 1 < 15) {
-                        openDay(ui.dayContainer.getChildAt(index + 1) as LinearLayout)
-                        true
-                    } else if (diffX > 0 && index - 1 >= 0) {
-                        openDay(ui.dayContainer.getChildAt(index - 1) as LinearLayout)
-                        true
-                    } else {
-                        false
-                    }
-                }
-
-                return false
-            }
-        })
+        initSchedule()
+        initGestureDetectorCompat()
 
         lifecycleScope.launch {
-            init()
+            loadCloudSchedule()
         }
 
         return ui.root
     }
 
-    private suspend fun init() {
-        // Загружается расписание, если оно еще не загружено
-        var processed = true
-        if (schedule == null) {
-            // Показывается анимация загрузки
-            mainActivity.showLoading()
+    /** Инициализация обработчика жестов для перелистывания дней */
+    private fun initGestureDetectorCompat() {
+        // Обработчик пролистывания дней
+        @Suppress("DEPRECATION")
+        gestureDetector = GestureDetectorCompat(requireContext(),
+            object : GestureDetector.SimpleOnGestureListener() {
+                private val SWIPE_THRESHOLD = 50     // минимальная дистанция
+                private val SWIPE_VELOCITY = 80      // минимальная скорость
 
-            try {
-                val schedules: Schedules = Schedule.getSchedule()
+                override fun onFling(
+                    e1: MotionEvent?,
+                    e2: MotionEvent,
+                    velocityX: Float,
+                    velocityY: Float
+                ): Boolean {
+                    if (e1 == null)
+                        return false
+                    val diffX = e2.x - e1.x
 
-                // Если сессия не авторизована, то открывается Login
-                // Если произошла ошибка, выводится ошибка
-                if (!schedules.status) {
-                    if (schedules.unauthorized) {
-                        processed = false
-                        val intent = Intent(context, LoginActivity::class.java)
-                        startActivity(intent)
-                    } else {
-                        Toast.makeText(
-                            context,
-                            R.string.error_api,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY) {
+                        val index = ui.dayContainer.indexOfChild(lastSelected)
+
+                        return if (diffX < 0 && index + 1 < 15) {
+                            openDay(ui.dayContainer.getChildAt(index + 1) as LinearLayout)
+                            true
+                        } else if (diffX > 0 && index - 1 >= 0) {
+                            openDay(ui.dayContainer.getChildAt(index - 1) as LinearLayout)
+                            true
+                        } else {
+                            false
+                        }
                     }
+
+                    return false
+                }
+            })
+
+
+        // Пролистывание доступно на списке уроков и фото выходных
+        @SuppressLint("ClickableViewAccessibility")
+        ui.rvLessons.setOnTouchListener { v, event ->
+            gestureDetector.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_UP) {
+                v.performClick()
+            }
+            false
+        }
+        @SuppressLint("ClickableViewAccessibility")
+        ui.weekendPhoto.setOnTouchListener { v, event ->
+            gestureDetector.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_UP) {
+                v.performClick()
+            }
+            true
+        }
+    }
+
+    /** Инициализация страницы расписания с данными из кеша */
+    private fun initSchedule() {
+        schedule = Schedule.getCacheSchedule()
+
+        // Показ расписания на сегодня или завтра
+        val date = if (LocalTime.now().hour >= 15) {
+            LocalDate.now().plusDays(1)
+        } else {
+            LocalDate.now()
+        }
+        fillDay(date.format(dateFormat))
+
+        // Отображение даты на две недели (15 дней)
+        fillDays()
+    }
+
+    private suspend fun loadCloudSchedule() {
+        val cacheSchedule = schedule
+
+        // Показывается анимация загрузки
+        mainActivity.showLoading()
+
+        try {
+            val schedules: Schedules = Schedule.getSchedule()
+
+            // Если сессия не авторизована, то открывается Login
+            // Если произошла ошибка, выводится ошибка
+            if (!schedules.status) {
+                if (schedules.unauthorized) {
+                    val intent = Intent(context, LoginActivity::class.java)
+                    startActivity(intent)
                 } else {
-                    schedule = schedules.schedule  // Сохранение расписания
+                    Toast.makeText(
+                        context,
+                        R.string.error_api,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-            } catch (e: Exception) {
-                Log.e("api-error", null, e)
-                Toast.makeText(
-                    context,
-                    R.string.error_load_schedule,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-            // Завершение загрузку расписания
-            mainActivity.hideLoading()
-        }
-
-        if (processed) {
-            // Если не получилось загрузить расписание, загрузка из кеша
-            if (schedule == null)
-                schedule = Schedule.getCacheSchedule()
-
-            // Отображение даты на две недели (15 дней)
-            fillDays()
-
-            // Показ расписания на сегодня или завтра
-            val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-            val date = if (LocalTime.now().hour >= 15) {
-                LocalDate.now().plusDays(1)
             } else {
-                LocalDate.now()
+                schedule = schedules.schedule  // Сохранение расписания
             }
-            fillDay(date.format(format))
-
-            // Пролистывание доступно на списке уроков и фото выходных
-            @SuppressLint("ClickableViewAccessibility")
-            ui.rvLessons.setOnTouchListener { v, event ->
-                gestureDetector.onTouchEvent(event)
-                if (event.action == MotionEvent.ACTION_UP) {
-                    v.performClick()
-                }
-                false
-            }
-            @SuppressLint("ClickableViewAccessibility")
-            ui.weekendPhoto.setOnTouchListener { v, event ->
-                gestureDetector.onTouchEvent(event)
-                if (event.action == MotionEvent.ACTION_UP) {
-                    v.performClick()
-                }
-                true
-            }
+        } catch (e: Exception) {
+            Log.e("api-error", null, e)
+            Toast.makeText(
+                context,
+                R.string.error_load_schedule,
+                Toast.LENGTH_SHORT
+            ).show()
         }
+
+        // Завершение загрузку расписания
+        mainActivity.hideLoading()
+
+        // Есть изменения
+        if (cacheSchedule != schedule)
+            openDay(lastSelected, anim = false)
     }
 
     /** Загрузка списка дней с датами и сокращением дня недели */
@@ -375,7 +382,7 @@ class ScheduleFragment : Fragment() {
     }
 
     /** Открывает определенный день по нажатии на кнопку, показывая анимацию перехода */
-    private fun openDay(item: LinearLayout) {
+    private fun openDay(item: LinearLayout, anim: Boolean = true) {
         val lastIndex: Int = ui.dayContainer.indexOfChild(lastSelected)
         val index: Int = ui.dayContainer.indexOfChild(item)
 
@@ -420,7 +427,7 @@ class ScheduleFragment : Fragment() {
             }
         })
 
-        if (lastLessons?.isEmpty() == true && lessons?.isEmpty() == true)
+        if (!anim || lastLessons?.isEmpty() == true && lessons?.isEmpty() == true)
             fillDay(date.format(format))
         else
             // Показ анимации и смена расписания

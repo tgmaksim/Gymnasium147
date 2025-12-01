@@ -45,19 +45,30 @@ class MainActivity : ParentActivity() {
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
-        // Показ анимации загрузки
-        showLoading()
+        // Если сессия уже существует, то показывается нужная страница
+        if (CacheManager.apiSession != null) {
+            // Смена страницы меню на ранее открытую
+            currentTab = CacheManager.openedActivity
+            replaceFragment(newMenuPage(currentTab), animation = false)
+            ui.bottomMenu.selectedItemId = currentTab
+
+            // Инициализация обработчиков нажатий кнопок меню и смены темы
+            setupMenuListener()
+            setupBtnThemeListener()
+
+            // Далее идет проверка сессии,
+            // которая также косвенным образом происходит при загрузке расписания
+            if (currentTab == menuIndex(R.id.it_schedule))
+                return
+        }
 
         // Проверяется сессия и, если надо, перенаправляется на авторизацию
-        // Только после проверки сессии продолжается отрисовка
         val context: Context = this
         lifecycleScope.launch {
-            var processed = true
             try {
                 val sessionStatus: SessionStatus = Login.checkSession()
 
                 if (!(sessionStatus.auth && sessionStatus.exists)) {
-                    processed = false
                     val intent = Intent(context, LoginActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -69,20 +80,6 @@ class MainActivity : ParentActivity() {
                     R.string.error_start,
                     Toast.LENGTH_SHORT
                 ).show()
-            }
-
-            // Завершается анимация загрузки
-            hideLoading()
-
-            if (processed) {
-                // Смена страницы меню на ранее открытую
-                currentTab = CacheManager.openedActivity
-                replaceFragment(newMenuPage(currentTab), animation = false)
-                ui.bottomMenu.selectedItemId = currentTab
-
-                // Инициализация обработчиков нажатий кнопок меню и смены темы
-                setupMenuListener()
-                setupBtnThemeListener()
             }
         }
     }
