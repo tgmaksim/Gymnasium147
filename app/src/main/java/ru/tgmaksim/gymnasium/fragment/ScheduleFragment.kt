@@ -8,7 +8,10 @@ import android.view.View
 import java.time.LocalDate
 import java.time.LocalTime
 import android.widget.Toast
+import android.text.Spanned
 import android.view.ViewGroup
+import android.graphics.Color
+import android.text.TextPaint
 import android.content.Intent
 import android.widget.TextView
 import android.view.MotionEvent
@@ -16,10 +19,11 @@ import kotlinx.coroutines.launch
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.view.GestureDetector
-import androidx.core.text.HtmlCompat
+import android.text.SpannableString
 import androidx.fragment.app.Fragment
 import android.annotation.SuppressLint
 import android.view.animation.Animation
+import android.text.style.ClickableSpan
 import androidx.lifecycle.lifecycleScope
 import java.time.format.DateTimeFormatter
 import androidx.core.content.ContextCompat
@@ -40,10 +44,13 @@ import ru.tgmaksim.gymnasium.api.HomeworkDocument
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
 import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
+import ru.tgmaksim.gymnasium.utilities.CacheManager
+import ru.tgmaksim.gymnasium.utilities.Utilities
 
 class LessonsAdapter(private var lessons: List<Lesson>,
                      private var hoursExtracurricularActivities: String?,
-                     private var extracurricularActivities: List<ExtracurricularActivity>) :
+                     private var extracurricularActivities: List<ExtracurricularActivity>,
+                     private var mainActivity: MainActivity) :
     RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
     class LessonViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
@@ -111,15 +118,36 @@ class LessonsAdapter(private var lessons: List<Lesson>,
 
         // Добавление прикрепленных файлов к уроку
         for (file: HomeworkDocument in lesson.files) {
-            val fileName: TextView = view.findViewById(R.id.homeworkDocumentName)
-            val htmlString = "<a href=\"${file.downloadUrl}\">${file.fileName}</a>"
-            val styledText = HtmlCompat.fromHtml(
-                htmlString,
-                HtmlCompat.FROM_HTML_MODE_LEGACY
-            )
+            val fileNameView: TextView = view.findViewById(R.id.homeworkDocumentName)
+            val spannable = SpannableString(file.fileName)
 
-            fileName.text = styledText
-            fileName.movementMethod = LinkMovementMethod.getInstance()
+            // Кликабельная ссылка
+            spannable.setSpan(object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    val url = file.downloadUrl
+
+                    // Открытие либо WebView, либо браузер
+                    if (CacheManager.openWebView) {
+                        mainActivity.supportFragmentManager.beginTransaction()
+                            .replace(
+                                R.id.content_container,
+                                WebViewFragment.newInstance(url)
+                            ).addToBackStack(null).commit()
+                    } else {
+                        Utilities.openUrl(mainActivity, url)
+                    }
+                }
+
+                override fun updateDrawState(ds: TextPaint) {
+                    super.updateDrawState(ds)
+                    ds.isUnderlineText = true
+                }
+            }, 0, spannable.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            fileNameView.text = spannable
+            fileNameView.movementMethod = LinkMovementMethod.getInstance()
+            fileNameView.highlightColor = Color.TRANSPARENT
+
             holder.tvFilesContainer.addView(view)
         }
     }
@@ -146,11 +174,20 @@ class LessonsAdapter(private var lessons: List<Lesson>,
 class ScheduleFragment : Fragment() {
     private lateinit var ui: FragmentScheduleBinding
     private lateinit var lastSelected: LinearLayout
-    private var schedule: List<ScheduleDay>? = null
     private lateinit var mainActivity: MainActivity
     @Suppress("DEPRECATION")
     private lateinit var gestureDetector: GestureDetectorCompat
     private val dateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+    // Расписание не уничтожается даже после перерисовки
+    companion object {
+        private var schedule: List<ScheduleDay>? = null
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        initGestureDetectorCompat()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -159,12 +196,15 @@ class ScheduleFragment : Fragment() {
         ui = FragmentScheduleBinding.inflate(inflater, container, false)
         mainActivity = activity as MainActivity
 
-        initSchedule()
-        initGestureDetectorCompat()
-
-        lifecycleScope.launch {
-            loadCloudSchedule()
+        // Синхронизация только при первой отрисовке
+        if (schedule == null) {
+            lifecycleScope.launch {
+                loadCloudSchedule()
+            }
         }
+
+        initSchedule()
+        initTouchListener()
 
         return ui.root
     }
@@ -175,7 +215,7 @@ class ScheduleFragment : Fragment() {
         @Suppress("DEPRECATION")
         gestureDetector = GestureDetectorCompat(requireContext(),
             object : GestureDetector.SimpleOnGestureListener() {
-                private val SWIPE_THRESHOLD = 50     // минимальная дистанция
+                private val SWIPE_THRESHOLD = 80     // минимальная дистанция
                 private val SWIPE_VELOCITY = 80      // минимальная скорость
 
                 override fun onFling(
@@ -205,8 +245,10 @@ class ScheduleFragment : Fragment() {
                     return false
                 }
             })
+    }
 
-
+    /** Привязка обработчиков жестов для перелистывания */
+    private fun initTouchListener() {
         // Пролистывание доступно на списке уроков и фото выходных
         @SuppressLint("ClickableViewAccessibility")
         ui.rvLessons.setOnTouchListener { v, event ->
@@ -324,7 +366,8 @@ class ScheduleFragment : Fragment() {
             ui.rvLessons.adapter = LessonsAdapter(
                 emptyList(),
                 null,
-                emptyList()
+                emptyList(),
+                mainActivity
             )
             ui.rvLessons.layoutManager = LinearLayoutManager(context)
         }

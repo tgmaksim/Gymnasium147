@@ -10,15 +10,12 @@ import androidx.lifecycle.lifecycleScope
 
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Login
-import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
 
 class LoginActivity : ParentActivity() {
     private lateinit var ui: LayoutLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        CacheManager.init(this)
-
         // Устанавливается сохраненная тема
         setActivityTheme()
         super.onCreate(savedInstanceState)

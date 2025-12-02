@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Гимназия №147</string>
     <string name="menu_item_schedule">Расписание</string>
@@ -22,4 +23,6 @@
     <string name="default_weekday">ПН</string>
     <string name="dnevnik_text">Дневник</string>
     <string name="login_with_dnevnik">Войти через Дневник.ру</string>
+
+    <string name="settings_webview">Открывать файлы в приложении</string>
 </resources>

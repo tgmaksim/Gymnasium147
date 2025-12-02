@@ -1,21 +1,12 @@
 package ru.tgmaksim.gymnasium.ui
 
-import android.util.Log
-import android.view.View
 import android.os.Bundle
-import java.lang.Exception
-import android.widget.Toast
-import android.content.Intent
-import android.content.Context
-import kotlinx.coroutines.launch
+import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 
 import ru.tgmaksim.gymnasium.R
-import ru.tgmaksim.gymnasium.api.Login
-import ru.tgmaksim.gymnasium.api.SessionStatus
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.fragment.MarksFragment
 import ru.tgmaksim.gymnasium.fragment.SchoolFragment
@@ -33,8 +24,6 @@ class MainActivity : ParentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        CacheManager.init(this)
-
         // Устанавливается сохраненная тема
         setActivityTheme()
         super.onCreate(savedInstanceState)
@@ -42,46 +31,16 @@ class MainActivity : ParentActivity() {
         ui = ActivityMainBinding.inflate(layoutInflater)
         setContentView(ui.root)
 
+        // После перерисовки текущий fragment сам отрисуется
+        if (savedInstanceState == null)
+            replaceFragment(newMenuPage(currentTab), animation = false)
+
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
-        // Если сессия уже существует, то показывается нужная страница
-        if (CacheManager.apiSession != null) {
-            // Смена страницы меню на ранее открытую
-            currentTab = CacheManager.openedActivity
-            replaceFragment(newMenuPage(currentTab), animation = false)
-            ui.bottomMenu.selectedItemId = currentTab
-
-            // Инициализация обработчиков нажатий кнопок меню и смены темы
-            setupMenuListener()
-            setupBtnThemeListener()
-
-            // Далее идет проверка сессии,
-            // которая также косвенным образом происходит при загрузке расписания
-            if (currentTab == menuIndex(R.id.it_schedule))
-                return
-        }
-
-        // Проверяется сессия и, если надо, перенаправляется на авторизацию
-        val context: Context = this
-        lifecycleScope.launch {
-            try {
-                val sessionStatus: SessionStatus = Login.checkSession()
-
-                if (!(sessionStatus.auth && sessionStatus.exists)) {
-                    val intent = Intent(context, LoginActivity::class.java)
-                    startActivity(intent)
-                    finish()
-                }
-            } catch (e: Exception) {
-                Log.e("api-error", null, e)
-                Toast.makeText(
-                    context,
-                    R.string.error_start,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
+        // Инициализация обработчиков нажатий кнопок меню и смены темы
+        setupMenuListener()
+        setupBtnThemeListener()
     }
 
     /** Настройка нажатий на кнопки меню */
@@ -106,7 +65,6 @@ class MainActivity : ParentActivity() {
 
             // Сохраняется открытая страница
             currentTab = item.itemId
-            CacheManager.openedActivity = item.itemId
             true
         }
     }

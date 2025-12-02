@@ -10,20 +10,20 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import ru.tgmaksim.gymnasium.R
 
+import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
 /** Общий класс для всех Activity */
 open class ParentActivity : AppCompatActivity() {
     /** Смена темы приложения на сохраненную в кеше */
     fun setActivityTheme() {
+        setTheme(R.style.Theme_Gymnasium)
+
         if (CacheManager.isDarkTheme)
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         else
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-
-        setTheme(R.style.Theme_Gymnasium)
     }
 
     /** Настройка системных краев (верхнего и нижнего) */

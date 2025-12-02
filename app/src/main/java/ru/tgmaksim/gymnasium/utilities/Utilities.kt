@@ -28,4 +28,9 @@ object Utilities {
             Toast.LENGTH_SHORT
         ).show()
     }
+
+    /** Логирование */
+    fun log(text: String) {
+        Log.d("Gymnasium", text)
+    }
 }
