@@ -1,6 +1,5 @@
 package ru.tgmaksim.gymnasium.ui
 
-import android.util.Log
 import android.view.View
 import android.os.Bundle
 import android.widget.Toast
@@ -11,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Login
 import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
+import ru.tgmaksim.gymnasium.utilities.Utilities
 
 class LoginActivity : ParentActivity() {
     private lateinit var ui: LayoutLoginBinding
@@ -27,22 +27,24 @@ class LoginActivity : ParentActivity() {
         setupSystemBars(ui.contentContainer)
 
         val context: Context = this
-        ui.btnLogin.setOnClickListener {
-            showLoading()
+        ui.buttonLogin.setOnClickListener {
             lifecycleScope.launch {
+                showLoading()
+
                 try {
                     Login.login(context)
                     finish()
                 } catch (e: Exception) {
-                    Log.e("api-error", null, e)
+                    Utilities.log(e)
                     Toast.makeText(
                         context,
                         R.string.error_login,
                         Toast.LENGTH_SHORT
                     ).show()
                 }
+
+                hideLoading()
             }
-            hideLoading()
         }
 
         // Заранее получается ссылка для входа
@@ -51,7 +53,7 @@ class LoginActivity : ParentActivity() {
             try {
                 Login.prepareLogin()
             } catch (e: Exception) {
-                Log.e("api-error", null, e)
+                Utilities.log(e)
             }
         }
         hideLoading()

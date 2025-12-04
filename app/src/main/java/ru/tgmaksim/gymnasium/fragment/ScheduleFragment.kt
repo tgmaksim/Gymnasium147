@@ -2,7 +2,6 @@ package ru.tgmaksim.gymnasium.fragment
 
 import kotlin.math.abs
 import java.util.Locale
-import android.util.Log
 import android.os.Bundle
 import android.view.View
 import java.time.LocalDate
@@ -40,12 +39,12 @@ import ru.tgmaksim.gymnasium.api.Lesson
 import ru.tgmaksim.gymnasium.api.Schedule
 import ru.tgmaksim.gymnasium.api.Schedules
 import ru.tgmaksim.gymnasium.api.ScheduleDay
+import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.api.HomeworkDocument
+import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
 import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
-import ru.tgmaksim.gymnasium.utilities.CacheManager
-import ru.tgmaksim.gymnasium.utilities.Utilities
 
 class LessonsAdapter(private var lessons: List<Lesson>,
                      private var hoursExtracurricularActivities: String?,
@@ -54,12 +53,12 @@ class LessonsAdapter(private var lessons: List<Lesson>,
     RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
     class LessonViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
-        val tvTime: TextView = view.findViewById(R.id.tvTime)
-        val tvSubject: TextView = view.findViewById(R.id.tvSubject)
-        val tvRoom: TextView = view.findViewById(R.id.tvRoom)
-        val tvHomework: TextView = view.findViewById(R.id.tvHomework)
-        val tvHomeworkGroup: LinearLayout = view.findViewById(R.id.tvHomeworkGroup)
-        val tvFilesContainer: LinearLayout = view.findViewById(R.id.tvFilesContainer)
+        val time: TextView = view.findViewById(R.id.time)
+        val subject: TextView = view.findViewById(R.id.subject)
+        val room: TextView = view.findViewById(R.id.room)
+        val homework: TextView = view.findViewById(R.id.homework)
+        val homeworkGroup: LinearLayout = view.findViewById(R.id.homeworkGroup)
+        val filesContainer: LinearLayout = view.findViewById(R.id.filesContainer)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
@@ -74,7 +73,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
         val lesson = if (position < lessons.size) {
             // Возвращение цвета
             holder.view.background = ContextCompat.getDrawable(
-                holder.view.context, R.drawable.bg_lesson_glass)
+                holder.view.context, R.drawable.bg_lesson)
 
             lessons[position]
         } else {
@@ -94,27 +93,27 @@ class LessonsAdapter(private var lessons: List<Lesson>,
         }
 
         // Заполняется информация в элементе
-        holder.tvTime.text = lesson.hours
-        holder.tvSubject.text = lesson.subject
-        holder.tvRoom.text = lesson.place
+        holder.time.text = lesson.hours
+        holder.subject.text = lesson.subject
+        holder.room.text = lesson.place
 
         // Показывается или скрывается домашнее задание
         if (lesson.homework?.isEmpty() == false) {
-            holder.tvHomework.text = lesson.homework
-            holder.tvHomeworkGroup.visibility = View.VISIBLE
+            holder.homework.text = lesson.homework
+            holder.homeworkGroup.visibility = View.VISIBLE
         }
         else {
-            holder.tvHomework.text = R.string.homework_not_found.toString()
-            holder.tvHomeworkGroup.visibility = View.GONE
+            holder.homework.text = R.string.homework_not_found.toString()
+            holder.homeworkGroup.visibility = View.GONE
         }
 
-        // Строка с гиперсылкой на ресурс
+        // Строка с гиперсылкой на ресурс (если есть)
         val view = LayoutInflater.from(holder.view.context).inflate(
             R.layout.item_homework_file,
-            holder.tvFilesContainer,
+            holder.filesContainer,
             false
         ) as LinearLayout
-        holder.tvFilesContainer.removeAllViews()
+        holder.filesContainer.removeAllViews()
 
         // Добавление прикрепленных файлов к уроку
         for (file: HomeworkDocument in lesson.files) {
@@ -126,7 +125,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
                 override fun onClick(widget: View) {
                     val url = file.downloadUrl
 
-                    // Открытие либо WebView, либо браузер
+                    // Открытие либо WebView, либо браузера
                     if (CacheManager.openWebView) {
                         mainActivity.supportFragmentManager.beginTransaction()
                             .replace(
@@ -148,7 +147,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
             fileNameView.movementMethod = LinkMovementMethod.getInstance()
             fileNameView.highlightColor = Color.TRANSPARENT
 
-            holder.tvFilesContainer.addView(view)
+            holder.filesContainer.addView(view)
         }
     }
 
@@ -199,7 +198,13 @@ class ScheduleFragment : Fragment() {
         // Синхронизация только при первой отрисовке
         if (schedule == null) {
             lifecycleScope.launch {
+                // Показывается анимация загрузки
+                mainActivity.showLoading()
+
                 loadCloudSchedule()
+
+                // Завершение загрузки расписания
+                mainActivity.hideLoading()
             }
         }
 
@@ -251,7 +256,7 @@ class ScheduleFragment : Fragment() {
     private fun initTouchListener() {
         // Пролистывание доступно на списке уроков и фото выходных
         @SuppressLint("ClickableViewAccessibility")
-        ui.rvLessons.setOnTouchListener { v, event ->
+        ui.lessons.setOnTouchListener { v, event ->
             gestureDetector.onTouchEvent(event)
             if (event.action == MotionEvent.ACTION_UP) {
                 v.performClick()
@@ -284,11 +289,9 @@ class ScheduleFragment : Fragment() {
         fillDays()
     }
 
+    /** Загрузка расписания с сервера */
     private suspend fun loadCloudSchedule() {
         val cacheSchedule = schedule
-
-        // Показывается анимация загрузки
-        mainActivity.showLoading()
 
         try {
             val schedules: Schedules = Schedule.getSchedule()
@@ -310,16 +313,13 @@ class ScheduleFragment : Fragment() {
                 schedule = schedules.schedule  // Сохранение расписания
             }
         } catch (e: Exception) {
-            Log.e("api-error", null, e)
+            Utilities.log(e)
             Toast.makeText(
                 context,
                 R.string.error_load_schedule,
                 Toast.LENGTH_SHORT
             ).show()
         }
-
-        // Завершение загрузку расписания
-        mainActivity.hideLoading()
 
         // Есть изменения
         if (cacheSchedule != schedule)
@@ -335,16 +335,16 @@ class ScheduleFragment : Fragment() {
 
         repeat(15) { i ->  // Заполнение дней на две недели (15 дней)
             val item = ItemDayBinding.inflate(layoutInflater, container, false)
-            item.root.setBackgroundResource(R.drawable.bg_day_selector)
+            item.root.setBackgroundResource(R.drawable.bg_button_day_selected)
 
             // Число и день недели
             val date = today.plusDays(i.toLong())
-            item.tvDayNumber.text = date.dayOfMonth.toString()
+            item.dayNumber.text = date.dayOfMonth.toString()
 
             @Suppress("DEPRECATION")  // У Local нет России
             val dayOfWeek = date.format(
                 DateTimeFormatter.ofPattern("EE", Locale("ru")))
-            item.tvDayWeek.text = dayOfWeek.uppercase()
+            item.weekday.text = dayOfWeek.uppercase()
 
             // Выбор активного дня: до 15:00 - текущий, после - следующий
             if (i == 0 && time.hour < 15 || i == 1 && time.hour >= 15) {
@@ -362,14 +362,14 @@ class ScheduleFragment : Fragment() {
     /** Показ расписания на данный день */
     private fun fillDay(date: String) {
         // Первый раз инициализация адаптера
-        if (ui.rvLessons.adapter == null) {
-            ui.rvLessons.adapter = LessonsAdapter(
+        if (ui.lessons.adapter == null) {
+            ui.lessons.adapter = LessonsAdapter(
                 emptyList(),
                 null,
                 emptyList(),
                 mainActivity
             )
-            ui.rvLessons.layoutManager = LinearLayoutManager(context)
+            ui.lessons.layoutManager = LinearLayoutManager(context)
         }
 
         if (schedule == null)
@@ -389,21 +389,21 @@ class ScheduleFragment : Fragment() {
 
         if (lessons.isEmpty() && scheduleDay != null) {
             // Обновление страницы с новыми данными
-            (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
+            (ui.lessons.adapter as LessonsAdapter).updateLessons(
                 lessons,
                 hoursExtracurricularActivities,
                 extracurricularActivities
             )
 
-            ui.rvLessons.visibility = View.GONE
+            ui.lessons.visibility = View.GONE
             ui.weekendPhoto.visibility = View.VISIBLE
         }
         else {
-            ui.rvLessons.visibility = View.VISIBLE
+            ui.lessons.visibility = View.VISIBLE
             ui.weekendPhoto.visibility = View.GONE
 
             // Обновление страницу с новыми данными
-            (ui.rvLessons.adapter as LessonsAdapter).updateLessons(
+            (ui.lessons.adapter as LessonsAdapter).updateLessons(
                 lessons,
                 hoursExtracurricularActivities,
                 extracurricularActivities
@@ -411,6 +411,7 @@ class ScheduleFragment : Fragment() {
         }
     }
 
+    /** Ищет день в расписании с нужной датой формата [dateFormat] */
     private fun searchScheduleDay(date: String): ScheduleDay? {
         if (schedule == null)
             return null
@@ -466,7 +467,7 @@ class ScheduleFragment : Fragment() {
                 // Заполнение расписания
                 fillDay(date.format(format))
                 if (lessons?.isEmpty() != true)
-                    ui.rvLessons.startAnimation(inAnim)
+                    ui.lessons.startAnimation(inAnim)
             }
         })
 
@@ -474,6 +475,6 @@ class ScheduleFragment : Fragment() {
             fillDay(date.format(format))
         else
             // Показ анимации и смена расписания
-            ui.rvLessons.startAnimation(outAnim)
+            ui.lessons.startAnimation(outAnim)
     }
 }

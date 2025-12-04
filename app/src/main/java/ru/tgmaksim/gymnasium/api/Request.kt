@@ -14,6 +14,12 @@ import kotlinx.serialization.Serializable
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 
+@Serializable
+data class SimpleInputData(val apiKey: String)
+
+@Serializable
+data class SessionData(val apiKey: String, val session: String)
+
 val httpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
         json(Json {
@@ -22,21 +28,26 @@ val httpClient = HttpClient(CIO) {
     }
 }
 
-@Serializable
-data class SimpleInputData(val apiKey: String)
-
-@Serializable
-data class SessionData(val apiKey: String, val session: String)
-
 object Request {
+    const val V = "v1"
+
     /** Общая функция для совершения API-запросов с помощью метода GET */
     suspend inline fun <reified TIN : Any, reified TOUT : Any> get(
         path: String,
         dataToSend: TIN
     ): TOUT {
-        return httpClient.get("${Constants.DOMAIN}/$path") {
+        return httpClient.get("${Constants.DOMAIN}/$V/$path") {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
+        }.body(typeInfo<TOUT>())
+    }
+
+    /** Общая функция для совершения API-запросов без входных данных с помощью метода GET */
+    suspend inline fun <reified TOUT : Any> get(
+        path: String
+    ): TOUT {
+        return httpClient.get("${Constants.DOMAIN}/$V/$path") {
+            contentType(ContentType.Application.Json)
         }.body(typeInfo<TOUT>())
     }
 
@@ -45,7 +56,7 @@ object Request {
         path: String,
         dataToSend: TIN
     ): TOUT {
-        return httpClient.post("${Constants.DOMAIN}/$path") {
+        return httpClient.post("${Constants.DOMAIN}/$V/$path") {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
         }.body(typeInfo<TOUT>())

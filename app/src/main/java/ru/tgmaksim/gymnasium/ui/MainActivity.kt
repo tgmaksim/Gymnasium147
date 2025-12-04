@@ -2,11 +2,17 @@ package ru.tgmaksim.gymnasium.ui
 
 import android.os.Bundle
 import android.view.View
+import android.graphics.Color
+import kotlinx.coroutines.launch
 import androidx.fragment.app.Fragment
 import android.content.res.Configuration
+import androidx.lifecycle.lifecycleScope
+import ru.tgmaksim.gymnasium.BuildConfig
 import androidx.appcompat.app.AppCompatDelegate
 
 import ru.tgmaksim.gymnasium.R
+import ru.tgmaksim.gymnasium.api.VersionChecker
+import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.fragment.MarksFragment
 import ru.tgmaksim.gymnasium.fragment.SchoolFragment
@@ -41,6 +47,43 @@ class MainActivity : ParentActivity() {
         // Инициализация обработчиков нажатий кнопок меню и смены темы
         setupMenuListener()
         setupBtnThemeListener()
+
+        // Проверка текущей версии приложения и при необходимости скачивание новой
+        lifecycleScope.launch {
+            checkVersion()
+        }
+    }
+
+    /** Проверка текущей версии приложения и при необходимости скачивание новой */
+    private suspend fun checkVersion() {
+        val versionStatus = VersionChecker.checkVersion(BuildConfig.VERSION_CODE)
+
+        CacheManager.versionStatus = versionStatus
+
+        if (versionStatus.newLatestVersion) {
+            // Показ красной точки возле иконки настроек
+            ui.bottomMenu.getOrCreateBadge(R.id.it_settings).apply {
+                isVisible = true
+                backgroundColor = Color.RED
+                clearNumber()
+            }
+
+            val settings = newMenuPage(R.id.it_settings) as SettingsFragment
+            settings.startLoading()
+
+            // Загрузка новой версии
+            CacheManager.loadedUpdate = VersionChecker.loadUpdate(
+                this,settings::progressLoadUpdate
+            ).let {
+                if (!it)
+                    Utilities.showText(this, "Не удалось скачать обновление...")
+                else
+                    Utilities.showText(this, "Обновление скачано, требуется установка")
+                it
+            }
+
+            settings.finishLoading()
+        }
     }
 
     /** Настройка нажатий на кнопки меню */
@@ -71,7 +114,7 @@ class MainActivity : ParentActivity() {
 
     /** Настройка нажатия на кнопку смены темы */
     private fun setupBtnThemeListener() {
-        ui.btnTheme.setOnClickListener {
+        ui.buttonTheme.setOnClickListener {
             val isDark = (resources.configuration.uiMode
                     and Configuration.UI_MODE_NIGHT_MASK) ==
                     Configuration.UI_MODE_NIGHT_YES

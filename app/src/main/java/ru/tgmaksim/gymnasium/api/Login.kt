@@ -9,12 +9,9 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 @Serializable
 data class LoginUrl(val loginUrl: String, val session: String)
 
-@Serializable
-data class SessionStatus(val exists: Boolean, val auth: Boolean)
-
 object Login {
+    const val PATH_PREFIX = "login"
     const val PATH_LOGIN: String = "login"
-    const val PATH_CHECK_SESSION = "checkSession"
     private var loginUrl: String? = null
 
     /**
@@ -27,12 +24,12 @@ object Login {
 
         val loginUrl = if (CacheManager.apiSession == null) {
             Request.post<SimpleInputData, LoginUrl>(
-                PATH_LOGIN,
+                "$PATH_PREFIX/$PATH_LOGIN",
                 SimpleInputData(Constants.API_KEY)
             )
         } else {
             Request.post<SessionData, LoginUrl>(
-                PATH_LOGIN,
+                "$PATH_PREFIX/$PATH_LOGIN",
                 SessionData(Constants.API_KEY, CacheManager.apiSession!!)
             )
         }
@@ -52,21 +49,5 @@ object Login {
      * При вызове [Login.login] сразу открывает сохраненную ссылку */
     suspend fun prepareLogin() {
         loginUrl = getLoginUrl()
-    }
-
-    /**
-     * Проверяет существование и авторизацию сессии
-     *
-     * Возвращает [SessionStatus] с параметрами [SessionStatus.exists] - существование сессии и
-     * [SessionStatus.auth] - авторизация сессии */
-    suspend fun checkSession(): SessionStatus {
-        if (CacheManager.apiSession?.isEmpty() != false)
-            // При отсутствии сессии сразу возвращает результат
-            return SessionStatus(exists = false, auth = false)
-
-        return Request.post<SessionData, SessionStatus>(
-            PATH_CHECK_SESSION,
-            SessionData(Constants.API_KEY, CacheManager.apiSession!!)
-        )
     }
 }

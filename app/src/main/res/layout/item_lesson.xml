@@ -6,7 +6,7 @@
     android:padding="12dp"
     android:layout_margin="5dp"
     android:layout_marginBottom="8dp"
-    android:background="@drawable/bg_lesson_glass"
+    android:background="@drawable/bg_lesson"
     android:clickable="true"
     android:focusable="true">
 
@@ -18,7 +18,7 @@
 
         <!-- Время урока -->
         <TextView
-            android:id="@+id/tvTime"
+            android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/default_bells_schedule"
@@ -28,7 +28,7 @@
 
         <!-- Кабинет -->
         <TextView
-            android:id="@+id/tvRoom"
+            android:id="@+id/room"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/default_place"
@@ -40,7 +40,7 @@
 
     <!-- Название предмета -->
     <TextView
-        android:id="@+id/tvSubject"
+        android:id="@+id/subject"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/default_subject"
@@ -50,7 +50,7 @@
         android:layout_marginTop="4dp" />
 
     <LinearLayout
-        android:id="@+id/tvHomeworkGroup"
+        android:id="@+id/homeworkGroup"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:orientation="horizontal">
@@ -65,7 +65,7 @@
 
         <!-- Текст домашнего задания -->
         <TextView
-            android:id="@+id/tvHomework"
+            android:id="@+id/homework"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
@@ -81,7 +81,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/tvFilesContainer"
+        android:id="@+id/filesContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" />

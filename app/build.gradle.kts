@@ -1,7 +1,7 @@
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-// Увеличиваем номер сборки при каждой компиляции
+// Увеличение номера сборки при каждой компиляции
 val versionPropsFile = rootProject.file("version.properties")
 val versionProps = Properties()
 
@@ -10,7 +10,7 @@ if (versionPropsFile.exists()) {
 }
 
 val buildNumber = versionProps.getProperty("BUILD_NUMBER", "1").toInt()
-val appVersion = versionProps.getProperty("APP_VERSION", "0.1.0")
+val appVersion: String? = versionProps.getProperty("APP_VERSION", "0.1.0")
 
 val newBuildNumber = buildNumber + 1
 
@@ -60,6 +60,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -79,6 +80,9 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.okhttp)
+    implementation(libs.okio)
+    implementation(libs.androidx.documentfile)
     testImplementation(libs.junit)
     implementation(libs.androidx.core.ktx)
     androidTestImplementation(libs.androidx.junit)

@@ -6,13 +6,14 @@
     <string name="menu_item_school">Школа</string>
     <string name="menu_item_settings">Настройки</string>
     <string name="sun_text">Тема</string>
+    <string name="hello">Приложение школы, которое поможет всегда узнавать о новых оценках и домашнем, не забывать о внеурочных занятиях и быть в курсе всех мероприятий</string>
 
     <string name="error_start">Произошла ошибка при запуске приложения</string>
     <string name="error_login">Произошла ошибка при попытке авторизоваться</string>
-    <string name="error_api">Произошла ошибка на сервере...</string>
+    <string name="error_api">Произошла ошибка на сервере…</string>
     <string name="error_load_schedule">Произошла ошибка при загрузке расписания</string>
 
-    <string name="default_bells_schedule">08:00 - 09:35</string>
+    <string name="default_bells_schedule">08:00 – 09:35</string>
     <string name="default_place">101</string>
     <string name="default_subject">Математика</string>
     <string name="homework_emoji">✏️</string>
@@ -23,6 +24,10 @@
     <string name="default_weekday">ПН</string>
     <string name="dnevnik_text">Дневник</string>
     <string name="login_with_dnevnik">Войти через Дневник.ру</string>
+    <string name="weekend_text">Выходные</string>
 
     <string name="settings_webview">Открывать файлы в приложении</string>
+    <string name="update">Обновление</string>
+    <string name="update_button">Обновить</string>
+    <string name="important_update">Изменено взаимодействие с сервером. Для корректной работы требуется обновить приложение.</string>
 </resources>

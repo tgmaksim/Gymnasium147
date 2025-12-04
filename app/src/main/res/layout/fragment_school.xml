@@ -5,7 +5,6 @@
 
     <!-- Название страницы -->
     <TextView
-        android:id="@+id/tvSchool"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/menu_item_school"

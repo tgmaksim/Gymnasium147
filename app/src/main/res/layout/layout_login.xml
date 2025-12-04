@@ -38,7 +38,7 @@
             android:id="@+id/description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Это приложение создано для распространения идей школьного ученического самоуправления в Гимназии и удобного использования расписания уроков"
+            android:text="@string/hello"
             android:textSize="16sp"
             android:textColor="@color/text_primary"
             android:layout_marginTop="24dp"
@@ -47,12 +47,12 @@
 
         <!-- Кнопка входа через Дневник.ру -->
         <LinearLayout
-            android:id="@+id/btnLogin"
+            android:id="@+id/buttonLogin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/login_btn_glass_bg"
+            android:background="@drawable/bg_button_login"
             android:padding="12dp"
             android:layout_marginTop="32dp"
             android:clickable="true"

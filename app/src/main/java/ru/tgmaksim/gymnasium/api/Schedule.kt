@@ -44,12 +44,13 @@ data class HomeworkDocument(
 )
 
 object Schedule {
+    const val PATH_PREFIX = "dnevnik"
     const val PATH_GET_SCHEDULE = "getSchedule"
 
-    /** Получает расписания на две недели (15 дней) */
+    /** Получает расписание на две недели (15 дней) */
     suspend fun getSchedule() : Schedules {
         val result: Schedules = Request.get<SessionData, Schedules> (
-            PATH_GET_SCHEDULE,
+            "$PATH_PREFIX/$PATH_GET_SCHEDULE",
             SessionData(
                 Constants.API_KEY,
                 CacheManager.apiSession.toString()

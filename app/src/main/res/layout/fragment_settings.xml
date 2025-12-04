@@ -5,7 +5,6 @@
 
     <!-- Название страницы -->
     <TextView
-        android:id="@+id/tvSettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/menu_item_settings"
@@ -23,7 +22,7 @@
         android:orientation="horizontal"
         android:padding="16dp"
         android:layout_gravity="top"
-        android:layout_marginTop="70dp">
+        android:layout_marginTop="50dp">
 
         <TextView
             android:layout_width="0dp"
@@ -34,11 +33,96 @@
             android:textColor="@color/text_primary"
             android:fontFamily="sans-serif" />
 
-        <Switch
+        <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/settingsWebViewSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true" />
+
+    </LinearLayout>
+
+    <!-- Блок обновления приложения -->
+    <LinearLayout
+        android:id="@+id/updateApplication"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:padding="16dp"
+        android:layout_gravity="top"
+        android:layout_marginTop="100dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Анимация загрузки -->
+            <FrameLayout
+                android:id="@+id/loadingOverlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:padding="10dp"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:layout_width="35dp"
+                    android:layout_height="35dp" />
+
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/update"
+                android:textSize="25sp"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:padding="10dp"
+                android:layout_marginTop="20dp"
+                android:gravity="center" />
+
+        </FrameLayout>
+
+        <!-- Многострочный текст с новыми функциями -->
+        <TextView
+            android:id="@+id/updateDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/important_update"
+            android:textSize="15sp"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif"
+            android:padding="8dp"
+            android:background="@drawable/bg_text_update"
+            android:gravity="start"
+            android:lineSpacingExtra="4dp" />
+
+        <!-- Прогресс загрузки -->
+        <ProgressBar
+            android:id="@+id/updateProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:layout_marginTop="12dp"
+            android:indeterminate="false"
+            android:progress="0"
+            android:progressTint="@color/update_progress_fill"
+            android:backgroundTint="@color/update_progress_bg" />
+
+        <!-- Кнопка установки -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/buttonUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/update_button"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_button_update" />
 
     </LinearLayout>
 

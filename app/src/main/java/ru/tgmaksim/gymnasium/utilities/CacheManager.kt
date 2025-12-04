@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.core.content.edit
 import android.content.SharedPreferences
 
+import ru.tgmaksim.gymnasium.api.VersionStatus
+
 object CacheManager {
     private lateinit var prefs: SharedPreferences
 
@@ -15,11 +17,6 @@ object CacheManager {
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    }
-
-    /** Очищает весь сохраненный кеш */
-    fun clear() {
-        prefs.all.clear()
     }
 
     /** Сохраненная тема приложения */
@@ -40,4 +37,9 @@ object CacheManager {
     var openWebView: Boolean
         get() = prefs.getBoolean(KEY_OPEN_WEBVIEW, true)
         set(value) = prefs.edit { putBoolean(KEY_OPEN_WEBVIEW, value) }
+
+    var versionStatus: VersionStatus = VersionStatus()
+
+    // Успешная загрузка - true, в процессе - false, ошибка - null
+    var loadedUpdate: Boolean? = false
 }
