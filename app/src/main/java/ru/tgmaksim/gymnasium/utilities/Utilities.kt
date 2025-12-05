@@ -7,7 +7,11 @@ import android.content.Intent
 import android.content.Context
 import androidx.core.net.toUri
 import java.security.MessageDigest
+import android.content.DialogInterface
 import android.content.ActivityNotFoundException
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
+import ru.tgmaksim.gymnasium.R
 
 object Utilities {
     /** Открывает ссылку в браузере */
@@ -53,5 +57,24 @@ object Utilities {
         }
 
         return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    /** Показ диалогового окна с уведомлением */
+    fun showAlertDialog(
+        context: Context,
+        title: String,
+        message: String,
+        buttonText: String,
+        back: Boolean = true,
+        buttonListener: DialogInterface.OnClickListener
+    ) {
+        MaterialAlertDialogBuilder(context, R.style.AppDialogTheme).apply {
+            setTitle(title)
+            setMessage(message)
+            setPositiveButton(buttonText, buttonListener)
+            if (back) setNegativeButton("Отмена", null)
+            setCancelable(back)
+            show()
+        }
     }
 }

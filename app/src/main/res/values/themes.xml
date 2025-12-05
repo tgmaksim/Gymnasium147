@@ -12,4 +12,13 @@
         <item name="android:windowBackground">@drawable/bg_gradient</item>
     </style>
 
+    <style name="AppDialogTheme" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="shapeAppearanceMediumComponent">@style/RoundShapeAppearance</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonPositive</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonNegative</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/DialogTitle</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/DialogText</item>
+        <item name="android:background">@color/dialog_background</item>
+    </style>
+
 </resources>

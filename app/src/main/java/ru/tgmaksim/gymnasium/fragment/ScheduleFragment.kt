@@ -19,6 +19,7 @@ import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.view.GestureDetector
 import android.text.SpannableString
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import android.annotation.SuppressLint
 import android.view.animation.Animation
@@ -26,10 +27,8 @@ import android.text.style.ClickableSpan
 import androidx.lifecycle.lifecycleScope
 import java.time.format.DateTimeFormatter
 import androidx.core.content.ContextCompat
-import ru.tgmaksim.gymnasium.ui.MainActivity
 import android.view.animation.AnimationUtils
 import android.text.method.LinkMovementMethod
-import ru.tgmaksim.gymnasium.ui.LoginActivity
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,6 +38,8 @@ import ru.tgmaksim.gymnasium.api.Lesson
 import ru.tgmaksim.gymnasium.api.Schedule
 import ru.tgmaksim.gymnasium.api.Schedules
 import ru.tgmaksim.gymnasium.api.ScheduleDay
+import ru.tgmaksim.gymnasium.ui.MainActivity
+import ru.tgmaksim.gymnasium.ui.LoginActivity
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.api.HomeworkDocument
 import ru.tgmaksim.gymnasium.utilities.CacheManager
@@ -173,6 +174,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
 class ScheduleFragment : Fragment() {
     private lateinit var ui: FragmentScheduleBinding
     private lateinit var lastSelected: LinearLayout
+    private lateinit var firstSelected: LinearLayout
     private lateinit var mainActivity: MainActivity
     @Suppress("DEPRECATION")
     private lateinit var gestureDetector: GestureDetectorCompat
@@ -210,6 +212,7 @@ class ScheduleFragment : Fragment() {
 
         initSchedule()
         initTouchListener()
+        setupBackListener()
 
         return ui.root
     }
@@ -277,6 +280,9 @@ class ScheduleFragment : Fragment() {
     private fun initSchedule() {
         schedule = Schedule.getCacheSchedule()
 
+        // Отображение даты на две недели (15 дней)
+        fillDays()
+
         // Показ расписания на сегодня или завтра
         val date = if (LocalTime.now().hour >= 15) {
             LocalDate.now().plusDays(1)
@@ -284,9 +290,16 @@ class ScheduleFragment : Fragment() {
             LocalDate.now()
         }
         fillDay(date.format(dateFormat))
+    }
 
-        // Отображение даты на две недели (15 дней)
-        fillDays()
+    /** Настройка нажатий на системную кнопку назад (или жестом) */
+    private fun setupBackListener() {
+        mainActivity.onBackPressedDispatcher.addCallback(mainActivity) {
+            if (lastSelected != firstSelected)
+                openDay(firstSelected)
+            else
+                mainActivity.moveTaskToBack(true)
+        }
     }
 
     /** Загрузка расписания с сервера */
@@ -350,6 +363,7 @@ class ScheduleFragment : Fragment() {
             if (i == 0 && time.hour < 15 || i == 1 && time.hour >= 15) {
                 item.root.isSelected = true
                 lastSelected = item.root
+                firstSelected = item.root
             }
 
             // Определение действия при нажатии

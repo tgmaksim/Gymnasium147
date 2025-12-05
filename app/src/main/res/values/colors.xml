@@ -5,6 +5,7 @@
     <color name="bg_gradient_end">#0288D1</color>
 
     <color name="text_primary">#000000</color>
+    <color name="text_secondary">#99000000</color>
 
     <color name="bg_bottom_menu">#FFFFFF</color>
     <color name="bottom_menu_icon_checked">#000000</color>
@@ -21,4 +22,8 @@
 
     <color name="update_progress_fill">#2979FF</color>
     <color name="update_progress_bg">#E0E0E0</color>
+
+    <color name="dialog_background">#B3E5FC</color>
+    <color name="dialog_button_positive">#0066CC</color>
+    <color name="dialog_button_negative">#555555</color>
 </resources>

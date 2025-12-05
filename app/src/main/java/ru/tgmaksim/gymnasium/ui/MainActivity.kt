@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.graphics.Color
 import kotlinx.coroutines.launch
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import android.content.res.Configuration
 import androidx.lifecycle.lifecycleScope
@@ -11,6 +12,7 @@ import ru.tgmaksim.gymnasium.BuildConfig
 import androidx.appcompat.app.AppCompatDelegate
 
 import ru.tgmaksim.gymnasium.R
+import ru.tgmaksim.gymnasium.api.Constants
 import ru.tgmaksim.gymnasium.api.VersionChecker
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
@@ -44,9 +46,10 @@ class MainActivity : ParentActivity() {
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
-        // Инициализация обработчиков нажатий кнопок меню и смены темы
+        // Инициализация обработчиков нажатий кнопок меню, смены темы и ухода назад
         setupMenuListener()
         setupBtnThemeListener()
+        setupBackListener()
 
         // Проверка текущей версии приложения и при необходимости скачивание новой
         lifecycleScope.launch {
@@ -59,6 +62,28 @@ class MainActivity : ParentActivity() {
         val versionStatus = VersionChecker.checkVersion(BuildConfig.VERSION_CODE)
 
         CacheManager.versionStatus = versionStatus
+
+        if (versionStatus.apiVersionDeprecated) {
+            Utilities.showAlertDialog(
+                this,
+                "Срочно требуется обновление",
+                "Похоже, данная версия приложения больше не обслуживается сервером. " +
+                        "Посетите официальный сайт для обновления",
+                "Обновить"
+            ) { _, _ ->
+                Utilities.openUrl(this, Constants.DOMAIN)
+            }
+        } else if (versionStatus.newApiVersion) {
+            Utilities.showAlertDialog(
+                this,
+                "Требуется обновление",
+                "Версия приложения устарела, поэтому некоторые функции могут не работать. " +
+                        "Посетите настройки для обновления",
+                "Обновить"
+            ) { _, _ ->
+                ui.bottomMenu.selectedItemId = R.id.it_settings
+            }
+        }
 
         if (versionStatus.newLatestVersion) {
             // Показ красной точки возле иконки настроек
@@ -127,6 +152,16 @@ class MainActivity : ParentActivity() {
                 CacheManager.isDarkTheme = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             }
+        }
+    }
+
+    /** Настройка нажатий на системную кнопку назад (или жестом) */
+    private fun setupBackListener() {
+        onBackPressedDispatcher.addCallback(this) {
+            // На страницах кроме расписания происходит возврат на страницу расписания
+            // В расписании свой обработчик
+            if (ui.bottomMenu.selectedItemId != R.id.it_schedule)
+                ui.bottomMenu.selectedItemId = R.id.it_schedule
         }
     }
 
