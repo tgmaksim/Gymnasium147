@@ -2,15 +2,13 @@ package ru.tgmaksim.gymnasium.ui
 
 import android.view.View
 import android.os.Bundle
-import android.widget.Toast
-import android.content.Context
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Login
-import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
 import ru.tgmaksim.gymnasium.utilities.Utilities
+import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
 
 class LoginActivity : ParentActivity() {
     private lateinit var ui: LayoutLoginBinding
@@ -26,21 +24,19 @@ class LoginActivity : ParentActivity() {
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
-        val context: Context = this
         ui.buttonLogin.setOnClickListener {
             lifecycleScope.launch {
                 showLoading()
 
                 try {
-                    Login.login(context)
+                    Login.login(this@LoginActivity)
                     finish()
                 } catch (e: Exception) {
                     Utilities.log(e)
-                    Toast.makeText(
-                        context,
-                        R.string.error_login,
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Utilities.showText(
+                        this@LoginActivity,
+                        R.string.error_login
+                    )
                 }
 
                 hideLoading()
@@ -48,15 +44,17 @@ class LoginActivity : ParentActivity() {
         }
 
         // Заранее получается ссылка для входа
-        showLoading()
         lifecycleScope.launch {
+            showLoading()
+
             try {
                 Login.prepareLogin()
             } catch (e: Exception) {
                 Utilities.log(e)
             }
+
+            hideLoading()
         }
-        hideLoading()
     }
 
     private fun showLoading() {

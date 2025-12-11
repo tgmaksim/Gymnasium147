@@ -27,6 +27,7 @@
     <string name="weekend_text">Выходные</string>
 
     <string name="settings_webview">Открывать файлы в приложении</string>
+    <string name="settings_ea">Уведомлять о внеурочках</string>
     <string name="update">Обновление</string>
     <string name="update_button">Обновить</string>
     <string name="important_update">Изменено взаимодействие с сервером. Для корректной работы требуется обновить приложение.</string>

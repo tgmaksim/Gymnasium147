@@ -14,6 +14,7 @@ object CacheManager {
     private const val KEY_API_SESSION = "api_session"
     private const val KEY_SCHEDULE = "schedule"
     private const val KEY_OPEN_WEBVIEW = "open_WebView"
+    private const val KEY_EA_NOTIFICATIONS = "extracurricular_activities"
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -34,12 +35,18 @@ object CacheManager {
         get() = prefs.getString(KEY_SCHEDULE, null)
         set(value) = prefs.edit { putString(KEY_SCHEDULE, value) }
 
+    /** Настройка открытия прикрепленных файлов к домашнему заданию.
+     * Если [openWebView] включена (по умолчанию),
+     * то документы открываются в приложении, иначе — в браузере */
     var openWebView: Boolean
         get() = prefs.getBoolean(KEY_OPEN_WEBVIEW, true)
         set(value) = prefs.edit { putBoolean(KEY_OPEN_WEBVIEW, value) }
 
+    /** Статус текущей версии (не сохраняется в кеше) */
     var versionStatus: VersionStatus = VersionStatus()
 
-    // Успешная загрузка - true, в процессе - false, ошибка - null
-    var loadedUpdate: Boolean? = false
+    /** Настройка уведомлений о скором начале внеурочки, по умолчанию - true */
+    var EANotifications: Boolean
+        get() = prefs.getBoolean(KEY_EA_NOTIFICATIONS, true)
+        set(value) = prefs.edit { putBoolean(KEY_EA_NOTIFICATIONS, value) }
 }

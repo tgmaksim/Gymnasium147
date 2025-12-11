@@ -1,23 +1,26 @@
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-// Увеличение номера сборки при каждой компиляции
-val versionPropsFile = rootProject.file("version.properties")
-val versionProps = Properties()
+val propsFile = rootProject.file("variables.properties")
+val props = Properties()
 
-if (versionPropsFile.exists()) {
-    versionProps.load(versionPropsFile.inputStream())
+if (propsFile.exists()) {
+    props.load(propsFile.inputStream())
 }
 
-val buildNumber = versionProps.getProperty("BUILD_NUMBER", "1").toInt()
-val appVersion: String? = versionProps.getProperty("APP_VERSION", "0.1.0")
+val buildNumber = props.getProperty("BUILD_NUMBER", "1").toInt()
+val appVersion: String = props.getProperty("APP_VERSION", "0.1.0")
+val domain: String = props.getProperty("DOMAIN")
+val apiKey: String = props.getProperty("API_KEY")
+val docsViewUrl: String = props.getProperty("DOCS_VIEW_URL")
 
+// Увеличение номера сборки при каждой компиляции
 val newBuildNumber = buildNumber + 1
 
 gradle.taskGraph.whenReady {
     if (hasTask(":app:assembleDebug") || hasTask(":app:assembleRelease")) {
-        versionProps["BUILD_NUMBER"] = newBuildNumber.toString()
-        versionProps.store(versionPropsFile.writer(), null)
+        props["BUILD_NUMBER"] = newBuildNumber.toString()
+        props.store(propsFile.writer(), null)
     }
 }
 
@@ -39,6 +42,10 @@ android {
         targetSdk = 36
         versionCode = newBuildNumber
         versionName = appVersion
+
+        buildConfigField("String", "DOMAIN", "\"$domain\"")
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
+        buildConfigField("String", "DOCS_VIEW_ULR", "\"$docsViewUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

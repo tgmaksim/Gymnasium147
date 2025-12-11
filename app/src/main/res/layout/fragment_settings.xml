@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <!-- Название страницы -->
     <TextView
@@ -20,24 +21,42 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:paddingHorizontal="16dp"
         android:layout_gravity="top"
-        android:layout_marginTop="50dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/settings_webview"
-            android:textSize="16sp"
-            android:textColor="@color/text_primary"
-            android:fontFamily="sans-serif" />
+        android:layout_marginTop="10dp">
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/settingsWebViewSwitch"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:checked="true" />
+            android:checked="true"
+            android:layout_weight="1"
+            android:text="@string/settings_webview"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif"
+            android:textColor="@color/text_primary" />
+
+    </LinearLayout>
+
+    <!-- Настройка: получать уведомления о внеурочках -->
+    <LinearLayout
+        android:id="@+id/settingsEANotifications"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:layout_gravity="top">
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/settingsEANotificationsSwitch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:layout_weight="1"
+            android:text="@string/settings_ea"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif"
+            android:textColor="@color/text_primary" />
 
     </LinearLayout>
 
@@ -48,42 +67,19 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="gone"
-        android:padding="16dp"
-        android:layout_gravity="top"
-        android:layout_marginTop="100dp">
+        android:paddingHorizontal="16dp"
+        android:layout_gravity="top">
 
-        <FrameLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <!-- Анимация загрузки -->
-            <FrameLayout
-                android:id="@+id/loadingOverlay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:padding="10dp"
-                android:visibility="gone">
-
-                <ProgressBar
-                    android:layout_width="35dp"
-                    android:layout_height="35dp" />
-
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/update"
-                android:textSize="25sp"
-                android:textColor="@color/text_primary"
-                android:fontFamily="sans-serif-medium"
-                android:padding="10dp"
-                android:layout_marginTop="20dp"
-                android:gravity="center" />
-
-        </FrameLayout>
+            android:text="@string/update"
+            android:textSize="25sp"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium"
+            android:padding="10dp"
+            android:layout_marginTop="20dp"
+            android:gravity="center" />
 
         <!-- Многострочный текст с новыми функциями -->
         <TextView
@@ -98,18 +94,6 @@
             android:background="@drawable/bg_text_update"
             android:gravity="start"
             android:lineSpacingExtra="4dp" />
-
-        <!-- Прогресс загрузки -->
-        <ProgressBar
-            android:id="@+id/updateProgress"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="12dp"
-            android:indeterminate="false"
-            android:progress="0"
-            android:progressTint="@color/update_progress_fill"
-            android:backgroundTint="@color/update_progress_bg" />
 
         <!-- Кнопка установки -->
         <androidx.appcompat.widget.AppCompatButton
@@ -126,4 +110,4 @@
 
     </LinearLayout>
 
-</FrameLayout>
+</LinearLayout>

@@ -14,51 +14,59 @@ import kotlinx.serialization.Serializable
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 
-@Serializable
-data class SimpleInputData(val apiKey: String)
+import ru.tgmaksim.gymnasium.BuildConfig
 
+/** Data-класс для открытых запросов без привязки к пользователю */
 @Serializable
-data class SessionData(val apiKey: String, val session: String)
+data class SimpleInputData(
+    val apiKey: String
+)
 
+/** Data-класс для простых запросов от имени пользователя */
+@Serializable
+data class SessionData(
+    val apiKey: String,
+    val session: String
+)
+
+/** Общие настройки Json */
+val json = Json {
+    ignoreUnknownKeys = true
+}
+
+/** Http-клиент для осуществления API-запросов */
 val httpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
-        json(Json {
-            ignoreUnknownKeys = true // Лишние параметры игнорируются
-        })
+        json(json)
     }
 }
 
 object Request {
-    const val V = "v1"
+    const val V = "v1"  // Версия API
 
-    /** Общая функция для совершения API-запросов с помощью метода GET */
+    /** API-запрос с помощью метода GET на получение данных с входными параметрами */
     suspend inline fun <reified TIN : Any, reified TOUT : Any> get(
         path: String,
         dataToSend: TIN
-    ): TOUT {
-        return httpClient.get("${Constants.DOMAIN}/$V/$path") {
+    ): TOUT =
+        httpClient.get("${BuildConfig.DOMAIN}/$V/$path") {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
         }.body(typeInfo<TOUT>())
-    }
 
-    /** Общая функция для совершения API-запросов без входных данных с помощью метода GET */
-    suspend inline fun <reified TOUT : Any> get(
-        path: String
-    ): TOUT {
-        return httpClient.get("${Constants.DOMAIN}/$V/$path") {
+    /** API-запрос с помощью метода GET на получение данных без входных параметров */
+    suspend inline fun <reified TOUT : Any> get(path: String): TOUT =
+        httpClient.get("${BuildConfig.DOMAIN}/$V/$path") {
             contentType(ContentType.Application.Json)
         }.body(typeInfo<TOUT>())
-    }
 
-    /** Общая функция для совершения API-запросов с помощью метода POST */
+    /** API-запрос с помощью метода POST на осуществление операций с входными данными */
     suspend inline fun <reified TIN : Any, reified TOUT : Any> post(
         path: String,
         dataToSend: TIN
-    ): TOUT {
-        return httpClient.post("${Constants.DOMAIN}/$V/$path") {
+    ): TOUT =
+        httpClient.post("${BuildConfig.DOMAIN}/$V/$path") {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
         }.body(typeInfo<TOUT>())
-    }
 }

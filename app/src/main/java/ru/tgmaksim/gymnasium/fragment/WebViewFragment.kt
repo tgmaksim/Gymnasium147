@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import android.annotation.SuppressLint
 import androidx.activity.OnBackPressedCallback
 
-import ru.tgmaksim.gymnasium.api.Constants
+import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.databinding.FragmentWebViewBinding
 
 class WebViewFragment : Fragment() {
@@ -26,7 +26,7 @@ class WebViewFragment : Fragment() {
 
             // Открытие документов через google
             fragment.arguments = Bundle().apply {
-                putString(ARG_URL, Constants.DOCS_VIEW_ULR + url)
+                putString(ARG_URL, BuildConfig.DOCS_VIEW_ULR + url)
             }
 
             return fragment

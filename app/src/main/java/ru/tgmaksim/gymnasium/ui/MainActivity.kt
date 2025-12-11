@@ -6,13 +6,10 @@ import android.graphics.Color
 import kotlinx.coroutines.launch
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
-import android.content.res.Configuration
 import androidx.lifecycle.lifecycleScope
-import ru.tgmaksim.gymnasium.BuildConfig
-import androidx.appcompat.app.AppCompatDelegate
 
 import ru.tgmaksim.gymnasium.R
-import ru.tgmaksim.gymnasium.api.Constants
+import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.api.VersionChecker
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
@@ -20,6 +17,7 @@ import ru.tgmaksim.gymnasium.fragment.MarksFragment
 import ru.tgmaksim.gymnasium.fragment.SchoolFragment
 import ru.tgmaksim.gymnasium.fragment.ScheduleFragment
 import ru.tgmaksim.gymnasium.fragment.SettingsFragment
+import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
 
 class MainActivity : ParentActivity() {
@@ -39,19 +37,21 @@ class MainActivity : ParentActivity() {
         ui = ActivityMainBinding.inflate(layoutInflater)
         setContentView(ui.root)
 
+        // Настройка системных полей сверху и снизу
+        setupSystemBars(ui.contentContainer)
+
+        NotificationManager.setupPostNotifications(this)
+
         // После перерисовки текущий fragment сам отрисуется
         if (savedInstanceState == null)
             replaceFragment(newMenuPage(currentTab), animation = false)
 
-        // Настройка системных полей сверху и снизу
-        setupSystemBars(ui.contentContainer)
-
         // Инициализация обработчиков нажатий кнопок меню, смены темы и ухода назад
         setupMenuListener()
-        setupBtnThemeListener()
+        setupButtonThemeListener()
         setupBackListener()
 
-        // Проверка текущей версии приложения и при необходимости скачивание новой
+        // Проверка текущей версии приложения
         lifecycleScope.launch {
             checkVersion()
         }
@@ -71,7 +71,7 @@ class MainActivity : ParentActivity() {
                         "Посетите официальный сайт для обновления",
                 "Обновить"
             ) { _, _ ->
-                Utilities.openUrl(this, Constants.DOMAIN)
+                Utilities.openUrl(this, BuildConfig.DOMAIN)
             }
         } else if (versionStatus.newApiVersion) {
             Utilities.showAlertDialog(
@@ -79,7 +79,7 @@ class MainActivity : ParentActivity() {
                 "Требуется обновление",
                 "Версия приложения устарела, поэтому некоторые функции могут не работать. " +
                         "Посетите настройки для обновления",
-                "Обновить"
+                "Настройки"
             ) { _, _ ->
                 ui.bottomMenu.selectedItemId = R.id.it_settings
             }
@@ -92,22 +92,6 @@ class MainActivity : ParentActivity() {
                 backgroundColor = Color.RED
                 clearNumber()
             }
-
-            val settings = newMenuPage(R.id.it_settings) as SettingsFragment
-            settings.startLoading()
-
-            // Загрузка новой версии
-            CacheManager.loadedUpdate = VersionChecker.loadUpdate(
-                this,settings::progressLoadUpdate
-            ).let {
-                if (!it)
-                    Utilities.showText(this, "Не удалось скачать обновление...")
-                else
-                    Utilities.showText(this, "Обновление скачано, требуется установка")
-                it
-            }
-
-            settings.finishLoading()
         }
     }
 
@@ -138,35 +122,27 @@ class MainActivity : ParentActivity() {
     }
 
     /** Настройка нажатия на кнопку смены темы */
-    private fun setupBtnThemeListener() {
+    private fun setupButtonThemeListener() =
         ui.buttonTheme.setOnClickListener {
-            val isDark = (resources.configuration.uiMode
-                    and Configuration.UI_MODE_NIGHT_MASK) ==
-                    Configuration.UI_MODE_NIGHT_YES
-
-            // Смена темы и сохранение в кеше
-            if (isDark) {
-                CacheManager.isDarkTheme = false
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            } else {
-                CacheManager.isDarkTheme = true
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            }
+            CacheManager.isDarkTheme = CacheManager.isDarkTheme.not()
+            setActivityTheme()
         }
-    }
 
     /** Настройка нажатий на системную кнопку назад (или жестом) */
-    private fun setupBackListener() {
+    private fun setupBackListener() =
         onBackPressedDispatcher.addCallback(this) {
             // На страницах кроме расписания происходит возврат на страницу расписания
             // В расписании свой обработчик
             if (ui.bottomMenu.selectedItemId != R.id.it_schedule)
                 ui.bottomMenu.selectedItemId = R.id.it_schedule
         }
-    }
 
     /** Смена страницы с анимацией перехода */
-    private fun replaceFragment(fragment: Fragment, toRight: Boolean = true, animation: Boolean = true) {
+    private fun replaceFragment(
+        fragment: Fragment,
+        toRight: Boolean = true,
+        animation: Boolean = true
+    ) {
         val transaction = supportFragmentManager.beginTransaction()
         if (animation) {
             transaction.setCustomAnimations(
