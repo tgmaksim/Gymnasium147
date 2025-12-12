@@ -8,7 +8,7 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val type = intent.getStringExtra("type")
 
-        if (!NotificationManager.checkPermission(context)) {
+        if (!NotificationManager.checkPermission(context) || !NotificationManager.canScheduleExactAlarms(context)) {
             CacheManager.EANotifications = false
             return
         }

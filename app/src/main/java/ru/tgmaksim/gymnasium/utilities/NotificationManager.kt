@@ -54,10 +54,7 @@ object NotificationManager {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val alarmManager = activity.getSystemService(AlarmManager::class.java)
-
-            // TODO: учитывать разрешение в других местах
-            if (!alarmManager.canScheduleExactAlarms()) {
+            if (!canScheduleExactAlarms(activity)) {
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                 intent.data = "package:${activity.packageName}".toUri()
                 activity.startActivity(intent)
@@ -71,6 +68,11 @@ object NotificationManager {
             context,
             Manifest.permission.POST_NOTIFICATIONS
         ) == PackageManager.PERMISSION_GRANTED
+
+    /** Проверка разрешения на создание напоминаний */
+    fun canScheduleExactAlarms(context: Context): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                context.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
 
     /** Показывает уведомление */
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)

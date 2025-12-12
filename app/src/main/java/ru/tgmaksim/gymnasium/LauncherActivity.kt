@@ -16,7 +16,7 @@ class LauncherActivity : AppCompatActivity() {
         if (CacheManager.apiSession == null) {
             startActivity(Intent(this, LoginActivity::class.java))
         } else {
-            startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, MainActivity::class.java).setData(intent.data))
         }
 
         finish()

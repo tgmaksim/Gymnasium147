@@ -193,8 +193,10 @@ class ScheduleFragment : Fragment() {
         ui = FragmentScheduleBinding.inflate(inflater, container, false)
         mainActivity = activity as MainActivity
 
-        // Синхронизация только при первой отрисовке
-        if (schedule == null) {
+        val uri = mainActivity.intent.data
+
+        // Синхронизация только при первой отрисовке или после входа по ссылке
+        if (schedule == null || uri?.host == "open") {
             lifecycleScope.launch {
                 mainActivity.showLoading()
                 loadCloudSchedule()
@@ -307,7 +309,7 @@ class ScheduleFragment : Fragment() {
             val date = LocalDate.parse(it.date, dateFormat)
             val startTimeEA = it.hoursEA?.let { h -> LocalTime.parse(h.start) }
 
-            it.ea.any() && date > LocalDate.now() || (date == LocalDate.now() && startTimeEA!! > LocalTime.now())
+            it.ea.any() && (date > LocalDate.now() || (date == LocalDate.now() && startTimeEA!! > LocalTime.now()))
         } ?: return  // Иначе ничего
 
         val startTime = LocalTime.parse(scheduleDay.hoursEA!!.start)
