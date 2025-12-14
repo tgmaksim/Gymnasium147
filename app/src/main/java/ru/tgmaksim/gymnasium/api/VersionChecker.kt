@@ -21,34 +21,52 @@ import java.security.cert.CertificateNotYetValidException
 
 import ru.tgmaksim.gymnasium.utilities.Utilities
 
-/** Data-класс с данными о текущей версии приложения */
-@Serializable
-data class Versions(
+/**
+ * Data-класс для низкоуровневого результата API-запроса /[VersionChecker.PATH_CHECK_VERSION]/.
+ * @param minApiVersion Минимальная версия API для корректной работы
+ * @param latestVersion Последняя версия приложения
+ * @param api Если глобальная версия API устарела, то false, иначе true
+ * @param updateLog Описание обновления приложения
+ * @author Максим Дрючин (tgmaksim)
+ * @see VersionChecker.checkVersion
+ * */
+@Serializable private data class Versions(
     val minApiVersion: Int? = null,
     val latestVersion: Int? = null,
     val api: Boolean? = null,  // Если версия API устарела, то api=false
     val updateLog: String? = null
 )
 
-@Serializable
-data class VersionStatus(
-    /** Глобальная версия API больше не работает */
+/**
+ * Data-класс для результата API-запроса /[VersionChecker.PATH_CHECK_VERSION]/.
+ * @param apiVersionDeprecated Глобальная версия API больше не поддерживается
+ * @param newApiVersion На сервере обновление: некоторые запросы могут не работать
+ * @param newLatestVersion Вышла новая версия приложения
+ * @param updateLog Описание обновления приложения
+ * @author Максим Дрючин (tgmaksim)
+ * @see VersionChecker.checkVersion
+ * */
+@Serializable data class VersionStatus(
     val apiVersionDeprecated: Boolean = false,
-
-    /** На сервере обновление: некоторые запросы могут не работать */
     val newApiVersion: Boolean = false,
-
-    /** Вышла новая версия приложения */
     val newLatestVersion: Boolean = false,
-
-    /** Список новых функций в обновлении */
     val updateLog: String? = null
 )
 
+/**
+ * API-singleton для проверки версии приложения
+ * @property PATH_CHECK_VERSION Название API-запроса для проверки версии
+ * @author Максим Дрючин (tgmaksim)
+ * */
 object VersionChecker {
     private const val PATH_CHECK_VERSION = "checkVersion"
 
-    /** Проверка текущей версии приложения */
+    /**
+     * Проверка версии приложения.
+     * @param version текущий номер сборки приложения
+     * @return статус текущей версии приложения в виде [VersionStatus]
+     * @author Максим Дрючин (tgmaksim)
+     * */
     suspend fun checkVersion(version: Int): VersionStatus {
         try {
             val response = Request.get<Versions>(PATH_CHECK_VERSION)
@@ -101,11 +119,12 @@ object VersionChecker {
 
         catch (e: Exception) {
             Utilities.log(e)
-            return VersionStatus(
-                apiVersionDeprecated = true,
-                newApiVersion = true,
-                newLatestVersion = true
-            )
+            if (Request.checkInternet())
+                return VersionStatus(
+                    apiVersionDeprecated = true,
+                    newApiVersion = true,
+                    newLatestVersion = true
+                )
         }
 
         return VersionStatus()

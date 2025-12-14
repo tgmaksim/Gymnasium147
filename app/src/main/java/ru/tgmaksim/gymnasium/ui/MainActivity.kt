@@ -20,18 +20,24 @@ import ru.tgmaksim.gymnasium.fragment.SettingsFragment
 import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
 
+/**
+ * Главная Activity приложения
+ * @author Максим Дрючин (tgmaksim)
+ * */
 class MainActivity : ParentActivity() {
     private lateinit var ui: ActivityMainBinding
+    /** Текущая открытая страница */
     private var currentTab = R.id.it_schedule
-    private val fragments = mutableMapOf<Int, Fragment>()
 
     companion object {
         var skipAnimation = false
+        /** Фрагменты страниц */
+        private val fragments = mutableMapOf<Int, Fragment>()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Устанавливается сохраненная тема
-        setActivityTheme()
+        setupActivityTheme()
         super.onCreate(savedInstanceState)
 
         ui = ActivityMainBinding.inflate(layoutInflater)
@@ -40,16 +46,27 @@ class MainActivity : ParentActivity() {
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
+        // Запрос разрешений на уведомления и напоминаний
         NotificationManager.setupPostNotifications(this)
 
         // После перерисовки текущий fragment сам отрисуется
-        if (savedInstanceState == null)
+        if (savedInstanceState == null) {
+            fragments.clear()
             replaceFragment(newMenuPage(currentTab), animation = false)
+        }
 
-        // Инициализация обработчиков нажатий кнопок меню, смены темы и ухода назад
-        setupMenuListener()
-        setupButtonThemeListener()
-        setupBackListener()
+        // Текущий фрагмент расписания скрыт
+        else if ((fragments[R.id.it_schedule]?.id ?: 0) == 0) {
+            val scheduleFragment = supportFragmentManager.fragments.find { it is ScheduleFragment }
+            if (scheduleFragment == null)
+                replaceFragment(newMenuPage(R.id.it_schedule), animation = false)
+            else
+                fragments[R.id.it_schedule] = scheduleFragment
+        }
+
+        setupMenuListener()  // Настройка нажатий на пункты меню
+        setupButtonThemeListener()  // Настройка кнопки смены темы
+        setupBackListener()  // Настройка нажатий на системную кнопку назад (или жестом)
 
         // Проверка текущей версии приложения
         lifecycleScope.launch {
@@ -57,12 +74,16 @@ class MainActivity : ParentActivity() {
         }
     }
 
-    /** Проверка текущей версии приложения и при необходимости скачивание новой */
+    /**
+     * Проверка текущей версии приложения и при необходимости уведомление пользователя
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private suspend fun checkVersion() {
+        // Проверка текущей версии
         val versionStatus = VersionChecker.checkVersion(BuildConfig.VERSION_CODE)
-
         CacheManager.versionStatus = versionStatus
 
+        // Глобальная версия API больше не поддерживается
         if (versionStatus.apiVersionDeprecated) {
             Utilities.showAlertDialog(
                 this,
@@ -73,7 +94,10 @@ class MainActivity : ParentActivity() {
             ) { _, _ ->
                 Utilities.openUrl(this, BuildConfig.DOMAIN)
             }
-        } else if (versionStatus.newApiVersion) {
+        }
+
+        // На сервере обновление: некоторые запросы могут не работать
+        else if (versionStatus.newApiVersion) {
             Utilities.showAlertDialog(
                 this,
                 "Требуется обновление",
@@ -95,7 +119,10 @@ class MainActivity : ParentActivity() {
         }
     }
 
-    /** Настройка нажатий на кнопки меню */
+    /**
+     * Настройка нажатий на кнопки меню
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun setupMenuListener() {
         ui.bottomMenu.setOnItemSelectedListener { item ->
             val newFragment = newMenuPage(item.itemId)
@@ -121,39 +148,60 @@ class MainActivity : ParentActivity() {
         }
     }
 
-    /** Настройка нажатия на кнопку смены темы */
+    /**
+     * Настройка нажатия на кнопку смены темы
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun setupButtonThemeListener() =
         ui.buttonTheme.setOnClickListener {
             CacheManager.isDarkTheme = CacheManager.isDarkTheme.not()
-            setActivityTheme()
+            setupActivityTheme()
         }
 
-    /** Настройка нажатий на системную кнопку назад (или жестом) */
+    /**
+     * Настройка нажатий на системную кнопку назад (или жестом)
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun setupBackListener() =
         onBackPressedDispatcher.addCallback(this) {
-            // На страницах кроме расписания происходит возврат на страницу расписания
-            // В расписании свой обработчик
-            if (ui.bottomMenu.selectedItemId != R.id.it_schedule)
+            // На странице расписания свой обработчик,
+            // но если действие не выполнено, окно сворачивается
+            if (ui.bottomMenu.selectedItemId == R.id.it_schedule) {
+                if (!(newMenuPage(R.id.it_schedule) as ScheduleFragment).onBackPressed())
+                    moveTaskToBack(true)
+            }
+
+            // Если открытая страница - не расписание, переход на нее
+            else {
                 ui.bottomMenu.selectedItemId = R.id.it_schedule
+            }
         }
 
-    /** Смена страницы с анимацией перехода */
+    /**
+     * Смена страницы с анимацией перехода
+     * @param fragment новая страница
+     * @param toRight показывать ли анимацию перехода вправо, иначе влево
+     * @param animation показывать ли анимацию
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun replaceFragment(
         fragment: Fragment,
         toRight: Boolean = true,
         animation: Boolean = true
     ) {
-        val transaction = supportFragmentManager.beginTransaction()
-        if (animation) {
-            transaction.setCustomAnimations(
-                if (toRight) R.anim.slide_in_right else R.anim.slide_in_left,
-                if (toRight) R.anim.slide_out_left else R.anim.slide_out_right
-            )
-        }
-        transaction.replace(R.id.content_container, fragment).commit()
+        supportFragmentManager.beginTransaction().apply {
+            if (animation)
+                setCustomAnimations(
+                    if (toRight) R.anim.slide_in_right else R.anim.slide_in_left,
+                    if (toRight) R.anim.slide_out_left else R.anim.slide_out_right
+                )
+        }.replace(R.id.content_container, fragment).commit()
     }
 
-    /** Получение идентификатора страницы */
+    /**
+     * Получение идентификатора страницы
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun menuIndex(id: Int): Int =
         when(id) {
             R.id.it_schedule -> 0
@@ -163,7 +211,11 @@ class MainActivity : ParentActivity() {
             else -> 0  // По умолчанию страница с расписанием
         }
 
-    /** Открытие страницы или создание новой */
+    /**
+     * Открытие страницы или создание нового экземпляра
+     * @param itemId идентификатор страницы в виде идентификатора ресурса
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun newMenuPage(itemId: Int): Fragment =
         fragments.getOrPut(itemId) {
             when(itemId) {
@@ -175,12 +227,18 @@ class MainActivity : ParentActivity() {
             }
         }
 
-    /** Показ анимации загрузки */
+    /**
+     * Показ анимации загрузки в левом верхнем углу
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun showLoading() {
         ui.loadingOverlay.visibility = View.VISIBLE
     }
 
-    /** Скрытие анимации загрузки */
+    /**
+     * Скрытие анимации загрузки в левом верхнем углу
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun hideLoading() {
         ui.loadingOverlay.visibility = View.GONE
     }

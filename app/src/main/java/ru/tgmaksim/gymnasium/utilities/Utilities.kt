@@ -12,8 +12,17 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 import ru.tgmaksim.gymnasium.R
 
+/**
+ * Утилиты приложения
+ * @author Максим Дрючин (tgmaksim)
+ * */
 object Utilities {
-    /** Открытие ссылки в браузере */
+    /**
+     * Открытие ссылки в браузере
+     * @param context Android-контекст
+     * @param url ссылка
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun openUrl(context: Context, url: String) {
         try {
             val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -24,7 +33,13 @@ object Utilities {
         }
     }
 
-    /** Показ уведомлений */
+    /**
+     * Показ системного текстового сообщения
+     * @param context Android-контекст
+     * @param text текст сообщения
+     * @param long показывать ли долгое сообщение
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun showText(context: Context, text: String, long: Boolean = false) {
         Toast.makeText(
             context,
@@ -33,6 +48,13 @@ object Utilities {
         ).show()
     }
 
+    /**
+     * Показ системного текстового сообщения
+     * @param context Android-контекст
+     * @param resId текст сообщения в виде ресурса
+     * @param long показывать ли долгое сообщение
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun showText(context: Context, @StringRes resId: Int, long: Boolean = false) {
         Toast.makeText(
             context,
@@ -41,16 +63,34 @@ object Utilities {
         ).show()
     }
 
-    /** Логирование */
+    /**
+     * Логирование данных
+     * @param text текстовые данные для логирования
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun log(text: String) {
         Log.d("Gymnasium", text)
     }
 
+    /**
+     * Логирование данных об ошибке
+     * @param e возникшая ошибка
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun log(e: Exception) {
-        Log.e("Gymnasium", null, e)
+        Log.e("Gymnasium", "Ошибка", e)
     }
 
-    /** Показ диалогового окна с уведомлением */
+    /**
+     * Показ диалогового окна с уведомлением
+     * @param context Android-контекст
+     * @param title заголовок диалогового окна
+     * @param message текст сообщения
+     * @param buttonText текст кнопки
+     * @param back показывать ли кнопку назад
+     * @param buttonListener действие при нажатии кнопки
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun showAlertDialog(
         context: Context,
         title: String,

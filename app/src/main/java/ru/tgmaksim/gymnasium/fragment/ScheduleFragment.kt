@@ -19,7 +19,6 @@ import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.view.GestureDetector
 import android.text.SpannableString
-import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import android.annotation.SuppressLint
 import android.view.animation.Animation
@@ -37,10 +36,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Hours
 import ru.tgmaksim.gymnasium.api.Lesson
-import ru.tgmaksim.gymnasium.api.Schedule
+import ru.tgmaksim.gymnasium.api.Request
+import ru.tgmaksim.gymnasium.api.Dnevnik
 import ru.tgmaksim.gymnasium.api.ScheduleDay
 import ru.tgmaksim.gymnasium.ui.MainActivity
-import ru.tgmaksim.gymnasium.api.ScheduleData
 import ru.tgmaksim.gymnasium.ui.LoginActivity
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
@@ -49,28 +48,45 @@ import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
 import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
 
+/**
+ * Адаптер для списка уроков в расписании определенного дня
+ * @param lessons уроки в виде списка уроков [Lesson]
+ * @param hoursEA время внеурочек данного дня (если есть) в виде [Hours]
+ * @param ea внеурочки данного дня (если есть) в виде списка внеурочек [ExtracurricularActivity]
+ * @param mainActivity объект [MainActivity], в котором находится фрагмент
+ * @author Максим Дрючин (tgmaksim)
+ * @see ScheduleFragment
+ * */
 class LessonsAdapter(private var lessons: List<Lesson>,
                      private var hoursEA: Hours?,
                      private var ea: List<ExtracurricularActivity>,
                      private var mainActivity: MainActivity) :
     RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
+    /**
+     * ViewHolder для элемента списка уроков
+     * @param view элемент списка уроков
+     * @property time [TextView] с временем урока
+     * @property subject [TextView] с названием предмета
+     * @property place [TextView] с кабинетом или другим местом проведения
+     * @property homework [TextView] с домашним заданием (если есть)
+     * @property homeworkGroup объект [LinearLayout] с элементами домашнего задания
+     * @property filesContainer список файлов домашнего задания (если есть) в виде [LinearLayout]
+     * @author Максим Дрючин (tgmaksim)
+     * */
     class LessonViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
         val time: TextView = view.findViewById(R.id.time)
         val subject: TextView = view.findViewById(R.id.subject)
-        val room: TextView = view.findViewById(R.id.room)
+        val place: TextView = view.findViewById(R.id.place)
         val homework: TextView = view.findViewById(R.id.homework)
         val homeworkGroup: LinearLayout = view.findViewById(R.id.homeworkGroup)
         val filesContainer: LinearLayout = view.findViewById(R.id.filesContainer)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_lesson, parent, false)
-        return LessonViewHolder(view)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder =
+        LessonViewHolder(LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_lesson, parent, false))
 
-    /** Создание элемент-карточки урока или внеурочки */
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
         // Для уроков объекты уже загружены
         val lesson = if (position < lessons.size) {
@@ -88,13 +104,13 @@ class LessonsAdapter(private var lessons: List<Lesson>,
             val subjects = ea.joinToString("\n") { it.subject }
             val place = ea.joinToString("; ") { it.place }
 
-            Lesson(position, subjects, place, hoursEA!!)
+            Lesson(position, subjects, place, hoursEA ?: Hours("00:00", "00:00"))
         }
 
         // Заполняется информация в элементе
         holder.time.text = lesson.hours.format()
         holder.subject.text = lesson.subject
-        holder.room.text = lesson.place
+        holder.place.text = lesson.place
 
         // Показывается или скрывается домашнее задание
         if (lesson.homework?.isEmpty() == false) {
@@ -106,7 +122,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
             holder.homeworkGroup.visibility = View.GONE
         }
 
-        // Строка с гиперссылкой на ресурс (если есть)
+        // Строка с гиперссылкой на ресурс с файлами к домашнему заданию (если есть)
         val view = LayoutInflater.from(holder.view.context).inflate(
             R.layout.item_homework_file,
             holder.filesContainer,
@@ -149,7 +165,13 @@ class LessonsAdapter(private var lessons: List<Lesson>,
         }
     }
 
-    /** Обновление расписания и его показ */
+    /**
+     * Обновление расписания
+     * @param newLessons новые уроки в виде списка уроков [Lesson]
+     * @param newHoursEA время внеурочек данного дня (если есть) в виде [Hours]
+     * @param newEA внеурочки данного дня
+     * @author Максим Дрючин (tgmaksim)
+     * */
     @SuppressLint("NotifyDataSetChanged")
     fun updateLessons(
         newLessons: List<Lesson>,
@@ -166,18 +188,23 @@ class LessonsAdapter(private var lessons: List<Lesson>,
         lessons.size + if (ea.isEmpty()) 0 else 1  // Карточка внеурочки всегда одна, либо ее нет
 }
 
+/**
+ * Fragment-страница с расписанием уроков пользователя
+ * @author Максим Дрючин (tgmaksim)
+ * @see ru.tgmaksim.gymnasium.ui.MainActivity
+ * */
 class ScheduleFragment : Fragment() {
     private lateinit var ui: FragmentScheduleBinding
+    /** Текущий выбранный день в виде [ItemDayBinding.root] */
     private lateinit var lastSelected: LinearLayout
-    private lateinit var firstSelected: LinearLayout
+    /** Объект [MainActivity], в котором находится фрагмент */
     private lateinit var mainActivity: MainActivity
-    @Suppress("DEPRECATION")
-    private lateinit var gestureDetector: GestureDetectorCompat
+    /** Объект для обработки жестов */
+    @Suppress("DEPRECATION") private lateinit var gestureDetector: GestureDetectorCompat
 
     companion object {
-        // Расписание не уничтожается даже после перерисовки
         private var schedule: List<ScheduleDay>? = null
-        private val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        private val dateFormat = DateTimeFormatter.ofPattern(ScheduleDay.DATE_FORMAT)
         private const val SCHEDULE_LENGTH = 15
     }
 
@@ -191,12 +218,10 @@ class ScheduleFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         ui = FragmentScheduleBinding.inflate(inflater, container, false)
-        mainActivity = activity as MainActivity
-
-        val uri = mainActivity.intent.data
+        mainActivity = requireActivity() as MainActivity
 
         // Синхронизация только при первой отрисовке или после входа по ссылке
-        if (schedule == null || uri?.host == "open") {
+        if (schedule == null || mainActivity.intent.data?.getQueryParameter("updateSchedule") == "true") {
             lifecycleScope.launch {
                 mainActivity.showLoading()
                 loadCloudSchedule()
@@ -204,17 +229,23 @@ class ScheduleFragment : Fragment() {
             }
         }
 
-        // Показ расписания, настройка перелистывания и нажатий кнопки назад (или жестом)
-        initSchedule()
-        setupTouchMove()
-        setupBackListener()
+        showScheduleCalendar()  // Отображение даты на две недели (15 дней)
+        showCacheSchedule()  // Показ расписания из кеша
 
         return ui.root
     }
 
-    /** Инициализация обработчика жестов для перелистывания дней */
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupFlipping()  // Настройка перелистывания дней жестом
+        createRemindEA()  // Создание напоминания на следующую внеурочку
+    }
+
+    /**
+     * Инициализация обработчика жестов для перелистывания дней и обновления расписания
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun initGestureDetectorCompat() {
-        // Обработчик перелистывания дней
         @Suppress("DEPRECATION")
         gestureDetector = GestureDetectorCompat(requireContext(),
             object : GestureDetector.SimpleOnGestureListener() {
@@ -229,20 +260,34 @@ class ScheduleFragment : Fragment() {
                 ): Boolean {
                     if (e1 == null)
                         return false
-                    val diffX = e2.x - e1.x
+                    val diffX = e2.x - e1.x  // Расстояние по x
+                    val diffY = e2.y - e1.y  // Расстояние по y
 
-                    if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY) {
+                    // Перелистывание жестом вправо/влево
+                    if (abs(diffX) >= SWIPE_THRESHOLD && abs(velocityX) >= SWIPE_VELOCITY) {
                         val index = ui.dayContainer.indexOfChild(lastSelected)
 
-                        return if (diffX < 0 && index + 1 < 15) {
-                            openDay(ui.dayContainer.getChildAt(index + 1) as LinearLayout)
+                        return if (diffX < 0) {
+                            if (index + 1 < SCHEDULE_LENGTH)
+                                openDay(ui.dayContainer.getChildAt(index + 1) as LinearLayout)
                             true
-                        } else if (diffX > 0 && index - 1 >= 0) {
-                            openDay(ui.dayContainer.getChildAt(index - 1) as LinearLayout)
+                        } else if (diffX > 0) {
+                            if (index - 1 >= 0)
+                                openDay(ui.dayContainer.getChildAt(index - 1) as LinearLayout)
                             true
                         } else {
                             false
                         }
+                    }
+
+                    // Обновление расписания жестом вниз
+                    else if (diffY >= SWIPE_THRESHOLD && abs(velocityY) >= SWIPE_VELOCITY) {
+                        lifecycleScope.launch {
+                            mainActivity.showLoading()
+                            loadCloudSchedule()
+                            mainActivity.hideLoading()
+                        }
+                        return true
                     }
 
                     return false
@@ -250,67 +295,70 @@ class ScheduleFragment : Fragment() {
             })
     }
 
-    /** Привязка обработчиков жестов для перелистывания */
-    private fun setupTouchMove() {
+    /**
+     * Настройка перелистывания дней жестом с помощью обработчика
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    private fun setupFlipping() {
         // Перелистывание доступно на списке уроков и фото выходных
         @SuppressLint("ClickableViewAccessibility")
         ui.lessons.setOnTouchListener { v, event ->
             gestureDetector.onTouchEvent(event)
-            if (event.action == MotionEvent.ACTION_UP) {
+            if (event.action == MotionEvent.ACTION_UP)
                 v.performClick()
-            }
             false
         }
         @SuppressLint("ClickableViewAccessibility")
         ui.weekendPhoto.setOnTouchListener { v, event ->
             gestureDetector.onTouchEvent(event)
-            if (event.action == MotionEvent.ACTION_UP) {
+            if (event.action == MotionEvent.ACTION_UP)
                 v.performClick()
-            }
             true
         }
     }
 
-    /** Инициализация страницы расписания с данными из кеша */
-    private fun initSchedule() {
-        schedule = Schedule.getCacheSchedule()
-
-        // Отображение даты на две недели (15 дней)
-        fillDays()
+    /**
+     * Получение из кеша и показ сохраненного расписания на нужный день
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    private fun showCacheSchedule() {
+        schedule = Dnevnik.getCacheSchedule()
 
         // Показ расписания на сегодня или завтра (после 15:00)
-        val date = if (LocalTime.now().hour >= 15) {
-            LocalDate.now().plusDays(1)
-        } else {
-            LocalDate.now()
-        }
-        fillDay(date.format(dateFormat))
-
-        // Создание напоминания на следующую внеурочку
-        createRemindEA()
+        showScheduleDay(getDefaultDate().format(dateFormat))
     }
 
-    /** Настройка нажатий на системную кнопку назад (или жестом) */
-    private fun setupBackListener() =
-        mainActivity.onBackPressedDispatcher.addCallback(this) {
-            if (lastSelected != firstSelected)
-                openDay(firstSelected)
-            else
-                mainActivity.moveTaskToBack(true)
+    /**
+     * Обработка нажатия на системную кнопку назад (или жестом) для перелистывания дней расписания
+     * @return true, если действие выполнено, иначе false
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    fun onBackPressed(): Boolean {
+        val defaultDate = getDefaultDate()
+        if ((lastSelected.tag as LocalDate) != defaultDate) {
+            openDay(ui.dayContainer.findViewWithTag(defaultDate))
+            return true
         }
 
-    /** Создание уведомлений о внеурочке */
+        return false
+    }
+
+    /**
+     * Создание напоминания о внеурочке в виде уведомления за несколько минут до начала
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun createRemindEA() {
+        // Функция выключена в настройках
         if (!CacheManager.EANotifications)
             return
 
         // Следующая по времени внеурочка (сегодня или в другой день)
         val scheduleDay = schedule?.find {
             val date = LocalDate.parse(it.date, dateFormat)
-            val startTimeEA = it.hoursEA?.let { h -> LocalTime.parse(h.start) }
+            val startTimeEA = it.hoursEA?.let { h -> LocalTime.parse(h.start) } ?: return@find false
 
-            it.ea.any() && (date > LocalDate.now() || (date == LocalDate.now() && startTimeEA!! > LocalTime.now()))
-        } ?: return  // Иначе ничего
+            it.ea.any() && (date > LocalDate.now() || (date == LocalDate.now() && startTimeEA > LocalTime.now()))
+        } ?: return  // Внеурочек не найдено
 
         val startTime = LocalTime.parse(scheduleDay.hoursEA!!.start)
         val timestamp = LocalDate.parse(scheduleDay.date, dateFormat)
@@ -332,28 +380,38 @@ class ScheduleFragment : Fragment() {
         )
     }
 
-    /** Загрузка расписания с сервера */
+    /**
+     * Загрузка актуального расписания API-запросом на сервер. Инициализация [schedule]
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private suspend fun loadCloudSchedule() {
         val cacheSchedule = schedule
 
         try {
-            val scheduleData: ScheduleData = Schedule.getSchedule()
+            val newSchedule = Dnevnik.getSchedule()
 
             // Если сессия не авторизована, то открывается Login
             // Если произошла ошибка, выводится ошибка
-            if (!scheduleData.status) {
-                if (scheduleData.unauthorized) {
-                    val intent = Intent(context, LoginActivity::class.java)
+            if (!newSchedule.status) {
+                if (newSchedule.unauthorized) {
+                    val intent = Intent(requireContext(), LoginActivity::class.java)
                     startActivity(intent)
+                    // Без закрытия MainActivity по нажатию системной кнопки назад (или жестом)
+                    // можно открыть локальное расписания
+//                    mainActivity.finish()
                 } else {
                     Utilities.showText(requireContext(), R.string.error_api)
                 }
             } else {
-                schedule = scheduleData.schedule  // Сохранение расписания
+                schedule = newSchedule.schedule  // Сохранение расписания
             }
         } catch (e: Exception) {
             Utilities.log(e)
-            Utilities.showText(requireContext(), R.string.error_load_schedule)
+            if (!Request.checkInternet())
+                Utilities.showText(requireContext(), R.string.error_internet)
+            else
+                Utilities.showText(requireContext(), R.string.error_load_schedule)
+            return
         }
 
         // Есть изменения
@@ -363,29 +421,31 @@ class ScheduleFragment : Fragment() {
         }
     }
 
-    /** Загрузка списка дней с датами и сокращением дня недели */
-    private fun fillDays() {
+    /**
+     * Показ горизонтального мини-календаря с прокруткой для просмотра расписания
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    private fun showScheduleCalendar() {
         val today = LocalDate.now()
         val time = LocalTime.now()
 
-        repeat(SCHEDULE_LENGTH) { i ->  // Заполнение дней на две недели (15 дней)
+        repeat(SCHEDULE_LENGTH) { i ->  // Заполнение дней на 2 недели (15 дней)
             val item = ItemDayBinding.inflate(layoutInflater, ui.dayContainer, false)
             item.root.setBackgroundResource(R.drawable.bg_button_day_selected)
 
             // Число и день недели
             val date = today.plusDays(i.toLong())
             item.dayNumber.text = date.dayOfMonth.toString()
+            item.root.tag = date // Идентификация по дате
 
             @Suppress("DEPRECATION")  // У Local нет России
-            val dayOfWeek = date.format(
-                DateTimeFormatter.ofPattern("EE", Locale("ru")))
+            val dayOfWeek = date.format(DateTimeFormatter.ofPattern("EE", Locale("ru")))
             item.weekday.text = dayOfWeek.uppercase()
 
             // Выбор активного дня: до 15:00 - текущий, после - следующий
             if (i == 0 && time.hour < 15 || i == 1 && time.hour >= 15) {
                 item.root.isSelected = true
                 lastSelected = item.root
-                firstSelected = item.root
             }
 
             // Определение действия при нажатии
@@ -395,8 +455,12 @@ class ScheduleFragment : Fragment() {
         }
     }
 
-    /** Показ расписания на данный день */
-    private fun fillDay(date: String) {
+    /**
+     * Показ расписания на данный день
+     * @param date дата в формате [ScheduleDay.DATE_FORMAT]
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    private fun showScheduleDay(date: String) {
         // Первый раз инициализация адаптера
         if (ui.lessons.adapter == null) {
             ui.lessons.adapter = LessonsAdapter(
@@ -405,7 +469,7 @@ class ScheduleFragment : Fragment() {
                 emptyList(),
                 mainActivity
             )
-            ui.lessons.layoutManager = LinearLayoutManager(context)
+            ui.lessons.layoutManager = LinearLayoutManager(requireContext())
         }
 
         if (schedule == null)
@@ -441,10 +505,20 @@ class ScheduleFragment : Fragment() {
         }
     }
 
-    /** Ищет день в расписании с нужной датой формата [dateFormat] */
+    /**
+     * Поиск дня в расписании с данной датой
+     * @param date дата в формате [ScheduleDay.DATE_FORMAT]
+     * @return найденный день в виде [ScheduleDay]
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun searchScheduleDay(date: String): ScheduleDay? = schedule?.find { it.date == date }
 
-    /** Открытие определенного дня по нажатии на кнопку, показывая анимацию перехода */
+    /**
+     * Открытие определенного дня расписания по нажатии на кнопку, показывая анимацию перехода
+     * @param item объект дня в мини-календаре
+     * @param anim показывать ли анимацию перехода
+     * @author Максим Дрючин (tgmaksim)
+     * */
     private fun openDay(item: LinearLayout, anim: Boolean = true) {
         val lastIndex = ui.dayContainer.indexOfChild(lastSelected)
         val index = ui.dayContainer.indexOfChild(item)
@@ -460,17 +534,17 @@ class ScheduleFragment : Fragment() {
             ui.dayScroll.smoothScrollTo(scrollTo, 0)
         }
 
-        val date = LocalDate.now().plusDays(index.toLong())
         val lastDate = LocalDate.now().plusDays(lastIndex.toLong())
+        val date = LocalDate.now().plusDays(index.toLong())
 
         // Выбор стороны анимации
         val toRight = index > lastIndex
         val inAnim = AnimationUtils.loadAnimation(
-            context,
+            requireContext(),
             if (toRight) R.anim.slide_in_right else R.anim.slide_in_left
         )
         val outAnim = AnimationUtils.loadAnimation(
-            context,
+            requireContext(),
             if (toRight) R.anim.slide_out_left else R.anim.slide_out_right
         )
 
@@ -483,7 +557,7 @@ class ScheduleFragment : Fragment() {
 
             override fun onAnimationEnd(animation: Animation?) {
                 // Заполнение расписания
-                fillDay(date.format(dateFormat))
+                showScheduleDay(date.format(dateFormat))
                 if (lessons?.isEmpty() == false)
                     ui.lessons.startAnimation(inAnim)
             }
@@ -491,9 +565,21 @@ class ScheduleFragment : Fragment() {
 
         // Если анимация не нужна или перелистывания осуществляется между выходными
         if (!anim || lastLessons?.isEmpty() != false && lessons?.isEmpty() != false)
-            fillDay(date.format(dateFormat))
+            showScheduleDay(date.format(dateFormat))
         // Показ анимации и смена расписания
         else
             ui.lessons.startAnimation(outAnim)
     }
+
+    /**
+     * День расписания по умолчанию (сегодня или завтра после 15:00)
+     * @return день в виде [LocalDate]
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    private fun getDefaultDate(): LocalDate =
+        if (LocalTime.now().hour >= 15) {
+            LocalDate.now().plusDays(1)
+        } else {
+            LocalDate.now()
+        }
 }

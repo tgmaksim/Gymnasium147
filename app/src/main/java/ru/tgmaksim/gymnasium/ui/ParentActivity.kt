@@ -14,10 +14,16 @@ import androidx.appcompat.app.AppCompatDelegate
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
-/** Общий класс для всех Activity */
+/**
+ * Базовый класс для всех Activity
+ * @author Максим Дрючин (tgmaksim)
+ * */
 open class ParentActivity : AppCompatActivity() {
-    /** Смена темы приложения на сохраненную в кеше */
-    fun setActivityTheme() {
+    /**
+     * Смена темы приложения на сохраненную в кеше
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    fun setupActivityTheme() {
         setTheme(R.style.Theme_Gymnasium)
 
         if (CacheManager.isDarkTheme)
@@ -26,7 +32,10 @@ open class ParentActivity : AppCompatActivity() {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
     }
 
-    /** Настройка системных краев (верхнего и нижнего) */
+    /**
+     * Настройка системных краев (верхнего и нижнего)
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun setupSystemBars(contentContainer: ViewGroup) {
         // Установка отступа сверху на высоту системной панели
         ViewCompat.setOnApplyWindowInsetsListener(contentContainer) { v, insets ->
@@ -44,7 +53,7 @@ open class ParentActivity : AppCompatActivity() {
             insets
         }
 
-        // Взятие системных полей под контроль приложения
+        // Взятие системных полей под контроль приложения для SDK < 35
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             @Suppress("DEPRECATION")
             window.setDecorFitsSystemWindows(false)

@@ -21,16 +21,26 @@ import android.content.Context.NOTIFICATION_SERVICE
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.ui.MainActivity
 
+/**
+ * Менеджер уведомлений для создания, планирования и запроса разрешений
+ * @author Максим Дрючин (tgmaksim)
+ * */
 object NotificationManager {
+    /** Название канала уведомлений о внеурочках */
     const val CHANNEL_EA = "extracurricularActivities"
+    /** requestCode для планирования уведомлений для напоминания о внеурочке */
     const val ALARM_REQUEST_CODE_EA = 1
 
-    /** Проверка разрешения на отправку уведомлений и запрос в случае необходимости */
+    /**
+     * Проверка разрешения на отправку уведомлений и запрос в случае необходимости
+     * @param activity Android-activity
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun setupPostNotifications(activity: Activity) {
-        // Создание канала уведомлений
         val notificationManager = activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val exists = notificationManager.getNotificationChannel(CHANNEL_EA)
 
+        // Создание канала уведомлений
         if (exists == null) {
             val channelName = "Внеурочные занятия"
             val channelDescription = "Уведомления о том, что через несколько минут начнется внеурочное занятие"
@@ -53,6 +63,7 @@ object NotificationManager {
             }
         }
 
+        // Запрос разрешения на создание напоминаний для SDK >= 31
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!canScheduleExactAlarms(activity)) {
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
@@ -62,19 +73,37 @@ object NotificationManager {
         }
     }
 
-    /** Проверка разрешения на отправку уведомлений */
+    /**
+     * Проверка разрешения на отправку уведомлений
+     * @param context Android-контекст
+     * @return true, если разрешение есть, иначе - false
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun checkPermission(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || ActivityCompat.checkSelfPermission(
             context,
             Manifest.permission.POST_NOTIFICATIONS
         ) == PackageManager.PERMISSION_GRANTED
 
-    /** Проверка разрешения на создание напоминаний */
+    /**
+     * Проверка разрешения на создание напоминаний
+     * @param context Android-контекст
+     * @return true, если разрешение есть, иначе - false
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun canScheduleExactAlarms(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
                 context.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
 
-    /** Показывает уведомление */
+    /**
+     * Показ уведомления
+     * @param context Android-контекст
+     * @param channel название канала уведомлений
+     * @param title заголовок уведомления
+     * @param message текст уведомления
+     * @param priority приоритет уведомления
+     * @author Максим Дрючин (tgmaksim)
+     * */
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun showNotification(
         context: Context,
@@ -102,7 +131,17 @@ object NotificationManager {
         manager.notify(System.currentTimeMillis().toInt(), builder.build())
     }
 
-    /** Планирует уведомление на время */
+    /**
+     * Планирование уведомления на время
+     * @param context Android-контекст
+     * @param channel название канала уведомлений
+     * @param title заголовок уведомления
+     * @param message текст уведомления
+     * @param priority приоритет уведомления
+     * @param timestamp время в миллисекундах
+     * @param requestCode requestCode для планирования
+     * @author Максим Дрючин (tgmaksim)
+     * */
     fun addAlarmNotification(
         context: Context,
         channel: String,
@@ -116,6 +155,7 @@ object NotificationManager {
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("type", "notification")
+            putExtra("timestamp", timestamp)
             putExtra("channel", channel)
             putExtra("title", title)
             putExtra("message", message)

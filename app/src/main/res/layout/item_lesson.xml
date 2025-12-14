@@ -26,14 +26,14 @@
             android:textColor="@color/lesson_time"
             android:fontFamily="sans-serif-medium" />
 
-        <!-- Кабинет -->
+        <!-- Кабинет или другое место проведения -->
         <TextView
-            android:id="@+id/room"
+            android:id="@+id/place"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/default_place"
             android:textSize="14sp"
-            android:textColor="@color/lesson_room"
+            android:textColor="@color/lesson_place"
             android:layout_marginStart="10dp" />
 
     </LinearLayout>

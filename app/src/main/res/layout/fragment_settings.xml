@@ -17,17 +17,17 @@
 
     <!-- Настройка: открывать файлы в приложении -->
     <LinearLayout
-        android:id="@+id/settingsWebView"
+        android:id="@+id/settings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:layout_gravity="top"
         android:layout_marginTop="10dp">
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/settingsWebViewSwitch"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="true"
             android:layout_weight="1"
@@ -36,20 +36,9 @@
             android:fontFamily="sans-serif"
             android:textColor="@color/text_primary" />
 
-    </LinearLayout>
-
-    <!-- Настройка: получать уведомления о внеурочках -->
-    <LinearLayout
-        android:id="@+id/settingsEANotifications"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:layout_gravity="top">
-
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/settingsEANotificationsSwitch"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="true"
             android:layout_weight="1"
@@ -57,6 +46,17 @@
             android:textSize="16sp"
             android:fontFamily="sans-serif"
             android:textColor="@color/text_primary" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/buttonLogout"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:layout_marginTop="10dp"
+            android:text="Выйти из профиля"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_button_update" />
 
     </LinearLayout>
 

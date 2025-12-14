@@ -2,15 +2,22 @@ package ru.tgmaksim.gymnasium.fragment
 
 import android.os.Bundle
 import android.view.View
+import android.content.Intent
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import androidx.fragment.app.Fragment
 
 import ru.tgmaksim.gymnasium.BuildConfig
+import ru.tgmaksim.gymnasium.ui.LoginActivity
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.FragmentSettingsBinding
 
+/**
+ * Fragment-страница с настройками приложения
+ * @author Максим Дрючин (tgmaksim)
+ * @see ru.tgmaksim.gymnasium.ui.MainActivity
+ * */
 class SettingsFragment : Fragment() {
     private lateinit var ui: FragmentSettingsBinding
 
@@ -29,11 +36,13 @@ class SettingsFragment : Fragment() {
         }
         ui.settingsEANotificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
             CacheManager.EANotifications = isChecked
+            // TODO: проверить разрешения
         }
 
         CacheManager.versionStatus.updateLog?.let {
             ui.updateDescription.text = it
         }
+
         if (CacheManager.versionStatus.newLatestVersion)
             ui.updateApplication.visibility = View.VISIBLE
         else
@@ -42,6 +51,13 @@ class SettingsFragment : Fragment() {
         // Нажатие на кнопку обновления
         ui.buttonUpdate.setOnClickListener {
             Utilities.openUrl(requireContext(), BuildConfig.DOMAIN)
+        }
+
+        ui.buttonLogout.setOnClickListener {
+            CacheManager.logout()
+            val intent = Intent(requireContext(), LoginActivity::class.java)
+            startActivity(intent)
+            requireActivity().finish()
         }
 
         return ui.root

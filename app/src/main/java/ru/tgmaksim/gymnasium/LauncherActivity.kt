@@ -8,13 +8,17 @@ import ru.tgmaksim.gymnasium.ui.MainActivity
 import ru.tgmaksim.gymnasium.ui.LoginActivity
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
+/**
+ * Загрузочная Activity (маршрутизатор)
+ * @author Максим Дрючин (tgmaksim)
+ * */
 class LauncherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Маршрутизация в зависимости от наличия сессии
         if (CacheManager.apiSession == null) {
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(Intent(this, LoginActivity::class.java).setData(intent.data))
         } else {
             startActivity(Intent(this, MainActivity::class.java).setData(intent.data))
         }

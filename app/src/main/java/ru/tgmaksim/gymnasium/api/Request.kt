@@ -15,23 +15,32 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 
 import ru.tgmaksim.gymnasium.BuildConfig
+import kotlin.coroutines.cancellation.CancellationException
 
-/** Data-класс для открытых запросов без привязки к пользователю */
-@Serializable
-data class SimpleInputData(
-    val apiKey: String
+/**
+ * Data-класс для параметров открытых (неперсонализированных) API-запросов
+ * @param apiKey API-ключ для каждого запроса (по умолчанию вставляется из конфигурации)
+ * @author Максим Дрючин (tgmaksim)
+ * */
+@Serializable data class SimpleInputData(
+    val apiKey: String = BuildConfig.API_KEY
 )
 
-/** Data-класс для простых запросов от имени пользователя */
-@Serializable
-data class SessionData(
-    val apiKey: String,
-    val session: String
+/**
+ * Data-класс для параметров простых персонализированных API-запросов
+ * @param session сессия пользователя
+ * @param apiKey API-ключ для каждого запроса (по умолчанию вставляется из конфигурации)
+ * @author Максим Дрючин (tgmaksim)
+ * */
+@Serializable data class SessionData(
+    val session: String,
+    val apiKey: String = BuildConfig.API_KEY
 )
 
-/** Общие настройки Json */
+/** Общие настройки Json для кеша и API-запросов */
 val json = Json {
     ignoreUnknownKeys = true
+    encodeDefaults = true
 }
 
 /** Http-клиент для осуществления API-запросов */
@@ -41,32 +50,64 @@ val httpClient = HttpClient(CIO) {
     }
 }
 
+/**
+ * Singleton для осуществления всех API-запросов
+ * @property V Глобальная версия API
+ * @author Максим Дрючин (tgmaksim)
+ * */
 object Request {
     const val V = "v1"  // Версия API
 
-    /** API-запрос с помощью метода GET на получение данных с входными параметрами */
+    /**
+     * Обобщенная функция для осуществления API-запросов с помощью метода GET с входными параметрами
+     * @param path путь к нужному запросу
+     * @param dataToSend объект [Serializable] data class с параметрами запроса
+     * @return десериализованный результат запроса
+     * @author Максим Дрючин (tgmaksim)
+     * */
     suspend inline fun <reified TIN : Any, reified TOUT : Any> get(
         path: String,
         dataToSend: TIN
     ): TOUT =
-        httpClient.get("${BuildConfig.DOMAIN}/$V/$path") {
+        httpClient.get(listOf(BuildConfig.DOMAIN, V, path).joinToString("/")) {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
         }.body(typeInfo<TOUT>())
 
-    /** API-запрос с помощью метода GET на получение данных без входных параметров */
-    suspend inline fun <reified TOUT : Any> get(path: String): TOUT =
-        httpClient.get("${BuildConfig.DOMAIN}/$V/$path") {
+    /**
+     * Обобщенная функция для осуществления API-запросов с помощью метода GET без входных параметров
+     * @param path путь к нужному запросу
+     * @return десериализованный результат запроса
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    suspend inline fun <reified TOUT : Any> get(
+        path: String
+    ): TOUT =
+        httpClient.get(listOf(BuildConfig.DOMAIN, V, path).joinToString("/")) {
             contentType(ContentType.Application.Json)
         }.body(typeInfo<TOUT>())
 
-    /** API-запрос с помощью метода POST на осуществление операций с входными данными */
+    /**
+     * Обобщенная функция для осуществления API-запросов с помощью метода POST с входными параметрами
+     * @param path путь к нужному запросу
+     * @param dataToSend объект [Serializable] data class с параметрами запроса
+     * @return десериализованный результат запроса
+     * @author Максим Дрючин (tgmaksim)
+     * */
     suspend inline fun <reified TIN : Any, reified TOUT : Any> post(
         path: String,
         dataToSend: TIN
     ): TOUT =
-        httpClient.post("${BuildConfig.DOMAIN}/$V/$path") {
+        httpClient.post(listOf(BuildConfig.DOMAIN, V, path).joinToString("/")) {
             contentType(ContentType.Application.Json)
             setBody(dataToSend, typeInfo<TIN>())
         }.body(typeInfo<TOUT>())
+
+    suspend fun checkInternet(): Boolean =
+        try {
+            httpClient.get(BuildConfig.DOMAIN)
+            true
+        } catch (e: Exception) {
+            e !is CancellationException
+        }
 }

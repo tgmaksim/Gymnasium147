@@ -6,14 +6,18 @@ import android.webkit.WebView
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.webkit.WebViewClient
+import androidx.activity.addCallback
 import android.webkit.WebChromeClient
 import androidx.fragment.app.Fragment
-import android.annotation.SuppressLint
-import androidx.activity.OnBackPressedCallback
 
 import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.databinding.FragmentWebViewBinding
 
+/**
+ * Fragment для отображения веб-страницы в окне приложения
+ * @author Максим Дрючин (tgmaksim)
+ * @see newInstance
+ * */
 class WebViewFragment : Fragment() {
     private lateinit var ui: FragmentWebViewBinding
     private var url: String? = null
@@ -21,16 +25,18 @@ class WebViewFragment : Fragment() {
     companion object {
         private const val ARG_URL = "arg_url"
 
-        fun newInstance(url: String): WebViewFragment {
-            val fragment = WebViewFragment()
-
-            // Открытие документов через google
-            fragment.arguments = Bundle().apply {
-                putString(ARG_URL, BuildConfig.DOCS_VIEW_ULR + url)
+        /**
+         * Создание экземпляра [WebViewFragment] для отображения веб-страницы
+         * @param url ссылка на веб-страницу
+         * @return экземпляр [WebViewFragment]
+         * @author Максим Дрючин (tgmaksim)
+         * */
+        fun newInstance(url: String): WebViewFragment =
+            WebViewFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_URL, BuildConfig.DOCS_VIEW_ULR + url)
+                }
             }
-
-            return fragment
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,21 +44,17 @@ class WebViewFragment : Fragment() {
         url = arguments?.getString(ARG_URL)
 
         // Перехват кнопки "Назад" — если WebView может вернуться назад, он возвращается
-        requireActivity().onBackPressedDispatcher.addCallback(this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (ui.webView.canGoBack()) {
-                        ui.webView.goBack()
-                    } else {
-                        // Возвращение назад и перерисовка
-                        parentFragmentManager.popBackStack()
-                        requireActivity().recreate()
-                    }
-                }
-            })
+        requireActivity().onBackPressedDispatcher.addCallback(this, true) {
+            if (ui.webView.canGoBack()) {
+                ui.webView.goBack()
+            } else {
+                // Возвращение назад и перерисовка
+                parentFragmentManager.popBackStack()
+                requireActivity().recreate()
+            }
+        }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -66,7 +68,6 @@ class WebViewFragment : Fragment() {
             displayZoomControls = false
             loadWithOverviewMode = true
             useWideViewPort = true
-            loadWithOverviewMode = true
             javaScriptEnabled = true
             domStorageEnabled = true
         }
