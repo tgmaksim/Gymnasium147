@@ -39,14 +39,10 @@ class SettingsFragment : Fragment() {
             // TODO: проверить разрешения
         }
 
-        CacheManager.versionStatus.updateLog?.let {
-            ui.updateDescription.text = it
-        }
-
-        if (CacheManager.versionStatus.newLatestVersion)
+        CacheManager.versionStatus?.let {
             ui.updateApplication.visibility = View.VISIBLE
-        else
-            ui.updateApplication.visibility = View.GONE
+            ui.updateDescription.text = "${it.latestVersionString} (${it.latestVersionNumber})\n${it.updateLogs}"
+        }
 
         // Нажатие на кнопку обновления
         ui.buttonUpdate.setOnClickListener {
@@ -54,7 +50,7 @@ class SettingsFragment : Fragment() {
         }
 
         ui.buttonLogout.setOnClickListener {
-            CacheManager.logout()
+            CacheManager.apiSession = null
             val intent = Intent(requireContext(), LoginActivity::class.java)
             startActivity(intent)
             requireActivity().finish()

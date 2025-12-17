@@ -1,22 +1,67 @@
 package ru.tgmaksim.gymnasium.api
 
-import android.content.Context
 import kotlinx.serialization.Serializable
 
-import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
 /**
- * Data-класс для результата API-запроса /[Login.PATH_PREFIX]/[Login.PATH_LOGIN]/.
- * @param loginUrl Ссылка для авторизации
- * @param session Сгенерированная сессия для дальнейших персонализированных API-запросов
+ * Data-класс для запроса создания сессии и последующей авторизации
+ * @param classId Идентификатор класса
+ * @param data Данные сессии для повторной авторизации без создания новой (может быть отклонено и создана новая)
  * @author Максим Дрючин (tgmaksim)
- * @see Login.requestLogin
  * */
-@Serializable private data class LoginUrl(
+@Serializable data class LoginApiRequest(
+    override val classId: Int = CLASS_ID,
+    override val data: ApiSession?
+) : ApiRequest() {
+    companion object {
+        const val CLASS_ID = 0x00000007
+    }
+}
+
+/**
+ * Data-класс для результата запроса проверки версии
+ * @param classId Идентификатор класса
+ * @param loginUrl Ссылка для авторизации сессии (нужно открыть в браузере пользователя)
+ * @param session Строковый идентификатор сессии для персонализированных запросов
+ * @author Максим Дрючин (tgmaksim)
+ * */
+@Serializable data class LoginResult(
+    override val classId: Int,
     val loginUrl: String,
     val session: String
-)
+) : ApiBase() {
+    companion object {
+        private const val CLASS_ID = 0x00000008
+    }
+    init {
+        if (classId != CLASS_ID)
+            throw ClassCastException()
+    }
+}
+
+/**
+ * Data-класс для ответа на запрос проверки версии
+ * @property classId Идентификатор класса
+ * @property status Статус выполненного запроса
+ * @property error Объект ошибки
+ * @property answer Ответ в случае успешной обработки
+ * @author Максим Дрючин (tgmaksim)
+ * */
+@Serializable data class LoginApiResponse(
+    override val classId: Int,
+    override val status: Boolean,
+    override val error: ApiError?,
+    override val answer: LoginResult?
+) : ApiResponse() {
+    companion object {
+        private const val CLASS_ID = 0x00000009
+    }
+    init {
+        if (classId != CLASS_ID && classId != ApiResponse.CLASS_ID)
+            throw ClassCastException()
+    }
+}
 
 /**
  * API-singleton для авторизации пользователя
@@ -27,65 +72,27 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 object Login {
     private const val PATH_PREFIX = "login"
     private const val PATH_LOGIN: String = "login"
-    private var loginUrl: String? = null
 
     /**
-     * Получение ссылки для авторизации запросом на сервер.
-     * Если ранее ссылка была получена и сохранена, то она сразу возвращается.
-     * @return ссылка для авторизации
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    private suspend inline fun getLoginUrl(): String =
-        if (loginUrl == null) {
-            loginUrl = requestLogin()
-            loginUrl!!
-        } else {
-            loginUrl!!
-        }
-
-    /**
-     * Создание сессии (если еще не создана) и открытие ссылки для ее авторизации
-     * @param context Android-context для открытия ссылки в браузере
-     * @see Login.getLoginUrl
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    suspend fun login(context: Context) = Utilities.openUrl(context, getLoginUrl())
-
-    /**
-     * Заранее создание сессии и сохранение ссылки для авторизации.
-     * @author Максим Дрючин (tgmaksim)
-     * @see Login.getLoginUrl
-     * */
-    suspend fun prepareLogin() {
-        getLoginUrl()
-    }
-
-    /**
-     * API-запрос /[Login.PATH_PREFIX]/[Login.PATH_LOGIN]/ с результатом [LoginUrl]
+     * API-запрос /[Login.PATH_PREFIX]/[Login.PATH_LOGIN]/ с результатом [LoginResult]
      * на создание сессии и получение ссылки для ее авторизации.
      * Полученная сессия сохраняется в кеш
      * @return ссылка для авторизации
      * @author Максим Дрючин (tgmaksim)
      * */
-    private suspend fun requestLogin(): String {
-        val apiSession = CacheManager.apiSession
+    suspend fun login(): LoginApiResponse {
+        val request = LoginApiRequest(data = CacheManager.apiSession?.let { ApiSession(session = it) })
 
-        // Если сессия существует, то сервер может только авторизовать ее, а не создавать новую
-        val loginUrl = if (apiSession == null) {
-            Request.post<SimpleInputData, LoginUrl>(
-                listOf(PATH_PREFIX, PATH_LOGIN).joinToString("/"),
-                SimpleInputData()
-            )
-        } else {
-            Request.post<SessionData, LoginUrl>(
-                listOf(PATH_PREFIX, PATH_LOGIN).joinToString("/"),
-                SessionData(apiSession)
-            )
-        }
+        val response = Request.post<LoginApiRequest, LoginApiResponse>(
+            listOf(PATH_PREFIX, PATH_LOGIN, LoginApiRequest.CLASS_ID).joinToString("/"),
+            request
+        )
 
         // Сохранение сессии в кеш
-        CacheManager.apiSession = loginUrl.session
+        response.answer?.let {
+            CacheManager.apiSession = it.session
+        }
 
-        return loginUrl.loginUrl
+        return response
     }
 }

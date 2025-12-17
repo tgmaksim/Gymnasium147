@@ -17,6 +17,9 @@ import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
  * */
 class LoginActivity : ParentActivity() {
     private lateinit var ui: LayoutLoginBinding
+    companion object {
+        var loginUrl: String? = null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Устанавливается сохраненная тема
@@ -33,18 +36,7 @@ class LoginActivity : ParentActivity() {
         ui.buttonLogin.setOnClickListener {
             lifecycleScope.launch {
                 showLoading()
-
-                try {
-                    Login.login(this@LoginActivity)
-                    finish()
-                } catch (e: Exception) {
-                    Utilities.log(e)
-                    if (!Request.checkInternet())
-                        Utilities.showText(this@LoginActivity, R.string.error_internet)
-                    else
-                        Utilities.showText(this@LoginActivity, R.string.error_login)
-                }
-
+                login()
                 hideLoading()
             }
         }
@@ -52,14 +44,45 @@ class LoginActivity : ParentActivity() {
         // Заранее получение ссылка для авторизации
         lifecycleScope.launch {
             showLoading()
+            prepareLogin()
+            hideLoading()
+        }
+    }
 
-            try {
-                Login.prepareLogin()
-            } catch (e: Exception) {
-                Utilities.log(e)
+    private suspend fun login() {
+        try {
+            val response = Login.login()
+
+            if (!response.status || response.answer == null) {
+                response.error?.let { error ->
+                    Utilities.log(error.type)
+
+                    (error.errorMessage ?: "Произошла ошибка на сервере").let { errorMessage ->
+                        Utilities.showText(this, errorMessage)
+                    }
+                }
+
+                return
             }
 
-            hideLoading()
+            Utilities.openUrl(this, response.answer.loginUrl)
+            finish()
+        } catch (e: Exception) {
+            Utilities.log(e)
+            if (!Request.checkInternet())
+                Utilities.showText(this, R.string.error_internet)
+            else
+                Utilities.showText(this, R.string.error_login)
+        }
+    }
+
+    private suspend fun prepareLogin() {
+        try {
+            val response = Login.login()
+
+            loginUrl = response.answer?.loginUrl
+        } catch (e: Exception) {
+            Utilities.log(e)
         }
     }
 

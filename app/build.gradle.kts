@@ -28,6 +28,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -79,19 +80,25 @@ kotlin {
 
 
 dependencies {
+    implementation(libs.okio)
+    implementation(libs.okhttp)
+    implementation(libs.material)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.core)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.firebase.analytics)
+    implementation(libs.androidx.documentfile)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.okhttp)
-    implementation(libs.okio)
-    implementation(libs.androidx.documentfile)
+    implementation(platform(libs.firebase.bom))
+
+    api(libs.firebase.messaging)
+    api(platform(libs.firebase.bom))
+
     testImplementation(libs.junit)
-    implementation(libs.androidx.core.ktx)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

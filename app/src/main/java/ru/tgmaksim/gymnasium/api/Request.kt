@@ -13,29 +13,11 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.statement.bodyAsText
 
 import ru.tgmaksim.gymnasium.BuildConfig
+import ru.tgmaksim.gymnasium.utilities.Utilities
 import kotlin.coroutines.cancellation.CancellationException
-
-/**
- * Data-класс для параметров открытых (неперсонализированных) API-запросов
- * @param apiKey API-ключ для каждого запроса (по умолчанию вставляется из конфигурации)
- * @author Максим Дрючин (tgmaksim)
- * */
-@Serializable data class SimpleInputData(
-    val apiKey: String = BuildConfig.API_KEY
-)
-
-/**
- * Data-класс для параметров простых персонализированных API-запросов
- * @param session сессия пользователя
- * @param apiKey API-ключ для каждого запроса (по умолчанию вставляется из конфигурации)
- * @author Максим Дрючин (tgmaksim)
- * */
-@Serializable data class SessionData(
-    val session: String,
-    val apiKey: String = BuildConfig.API_KEY
-)
 
 /** Общие настройки Json для кеша и API-запросов */
 val json = Json {
@@ -52,58 +34,27 @@ val httpClient = HttpClient(CIO) {
 
 /**
  * Singleton для осуществления всех API-запросов
- * @property V Глобальная версия API
  * @author Максим Дрючин (tgmaksim)
  * */
 object Request {
-    const val V = "v1"  // Версия API
-
-    /**
-     * Обобщенная функция для осуществления API-запросов с помощью метода GET с входными параметрами
-     * @param path путь к нужному запросу
-     * @param dataToSend объект [Serializable] data class с параметрами запроса
-     * @return десериализованный результат запроса
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    suspend inline fun <reified TIN : Any, reified TOUT : Any> get(
-        path: String,
-        dataToSend: TIN
-    ): TOUT =
-        httpClient.get(listOf(BuildConfig.DOMAIN, V, path).joinToString("/")) {
-            contentType(ContentType.Application.Json)
-            setBody(dataToSend, typeInfo<TIN>())
-        }.body(typeInfo<TOUT>())
-
-    /**
-     * Обобщенная функция для осуществления API-запросов с помощью метода GET без входных параметров
-     * @param path путь к нужному запросу
-     * @return десериализованный результат запроса
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    suspend inline fun <reified TOUT : Any> get(
-        path: String
-    ): TOUT =
-        httpClient.get(listOf(BuildConfig.DOMAIN, V, path).joinToString("/")) {
-            contentType(ContentType.Application.Json)
-        }.body(typeInfo<TOUT>())
-
     /**
      * Обобщенная функция для осуществления API-запросов с помощью метода POST с входными параметрами
      * @param path путь к нужному запросу
-     * @param dataToSend объект [Serializable] data class с параметрами запроса
+     * @param request объект [Serializable] data class с параметрами запроса
      * @return десериализованный результат запроса
      * @author Максим Дрючин (tgmaksim)
      * */
-    suspend inline fun <reified TIN : Any, reified TOUT : Any> post(
+    suspend inline fun <reified TReq : ApiRequest, reified TRes : ApiResponse> post(
         path: String,
-        dataToSend: TIN
-    ): TOUT =
-        httpClient.post(listOf(BuildConfig.DOMAIN, V, path).joinToString("/")) {
+        request: TReq
+    ): TRes {
+        return httpClient.post(listOf(BuildConfig.DOMAIN, path).joinToString("/")) {
             contentType(ContentType.Application.Json)
-            setBody(dataToSend, typeInfo<TIN>())
-        }.body(typeInfo<TOUT>())
+            setBody(request, typeInfo<TReq>())
+        }.body(typeInfo<TRes>())
+    }
 
-    suspend fun checkInternet(): Boolean =
+    suspend inline fun checkInternet(): Boolean =
         try {
             httpClient.get(BuildConfig.DOMAIN)
             true

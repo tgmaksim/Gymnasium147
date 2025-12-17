@@ -34,33 +34,37 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
 
 import ru.tgmaksim.gymnasium.R
-import ru.tgmaksim.gymnasium.api.Hours
-import ru.tgmaksim.gymnasium.api.Lesson
 import ru.tgmaksim.gymnasium.api.Request
 import ru.tgmaksim.gymnasium.api.Dnevnik
 import ru.tgmaksim.gymnasium.api.ScheduleDay
 import ru.tgmaksim.gymnasium.ui.MainActivity
 import ru.tgmaksim.gymnasium.ui.LoginActivity
+import ru.tgmaksim.gymnasium.api.ApiSession
+import ru.tgmaksim.gymnasium.api.ScheduleHours
+import ru.tgmaksim.gymnasium.api.ScheduleLesson
 import ru.tgmaksim.gymnasium.utilities.Utilities
+import ru.tgmaksim.gymnasium.api.ScheduleApiRequest
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
-import ru.tgmaksim.gymnasium.api.ExtracurricularActivity
+import ru.tgmaksim.gymnasium.api.ScheduleExtracurricularActivity
 import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
 
 /**
  * Адаптер для списка уроков в расписании определенного дня
- * @param lessons уроки в виде списка уроков [Lesson]
- * @param hoursEA время внеурочек данного дня (если есть) в виде [Hours]
- * @param ea внеурочки данного дня (если есть) в виде списка внеурочек [ExtracurricularActivity]
+ * @param lessons уроки в виде списка уроков [ScheduleLesson]
+ * @param hoursEA время внеурочек данного дня (если есть) в виде [ScheduleHours]
+ * @param ea внеурочки данного дня (если есть) в виде списка внеурочек [ScheduleExtracurricularActivity]
  * @param mainActivity объект [MainActivity], в котором находится фрагмент
  * @author Максим Дрючин (tgmaksim)
  * @see ScheduleFragment
  * */
-class LessonsAdapter(private var lessons: List<Lesson>,
-                     private var hoursEA: Hours?,
-                     private var ea: List<ExtracurricularActivity>,
-                     private var mainActivity: MainActivity) :
+class LessonsAdapter(private var lessons: List<ScheduleLesson>,
+                     private var hoursEA: ScheduleHours?,
+                     private var ea: List<ScheduleExtracurricularActivity>,
+                     private val mainActivity: MainActivity,
+                     @Suppress("DEPRECATION")
+                     private val gestureDetector: GestureDetectorCompat) :
     RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
     /**
@@ -104,7 +108,7 @@ class LessonsAdapter(private var lessons: List<Lesson>,
             val subjects = ea.joinToString("\n") { it.subject }
             val place = ea.joinToString("; ") { it.place }
 
-            Lesson(position, subjects, place, hoursEA ?: Hours("00:00", "00:00"))
+            ScheduleLesson(position, subjects, place, hoursEA ?: ScheduleHours("00:00", "00:00"))
         }
 
         // Заполняется информация в элементе
@@ -129,6 +133,15 @@ class LessonsAdapter(private var lessons: List<Lesson>,
             false
         ) as LinearLayout
         holder.filesContainer.removeAllViews()
+
+        // Перелистывание доступно на списке уроков и фото выходных
+        @SuppressLint("ClickableViewAccessibility")
+        holder.view.setOnTouchListener { v, event ->
+            gestureDetector.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_UP)
+                v.performClick()
+            false
+        }
 
         // Добавление прикрепленных файлов к уроку
         for (file in lesson.files) {
@@ -167,16 +180,16 @@ class LessonsAdapter(private var lessons: List<Lesson>,
 
     /**
      * Обновление расписания
-     * @param newLessons новые уроки в виде списка уроков [Lesson]
-     * @param newHoursEA время внеурочек данного дня (если есть) в виде [Hours]
+     * @param newLessons новые уроки в виде списка уроков [ScheduleLesson]
+     * @param newHoursEA время внеурочек данного дня (если есть) в виде [ScheduleHours]
      * @param newEA внеурочки данного дня
      * @author Максим Дрючин (tgmaksim)
      * */
     @SuppressLint("NotifyDataSetChanged")
     fun updateLessons(
-        newLessons: List<Lesson>,
-        newHoursEA: Hours?,
-        newEA: List<ExtracurricularActivity>
+        newLessons: List<ScheduleLesson>,
+        newHoursEA: ScheduleHours?,
+        newEA: List<ScheduleExtracurricularActivity>
     ) {
         lessons = newLessons
         hoursEA = newHoursEA
@@ -281,7 +294,7 @@ class ScheduleFragment : Fragment() {
                     }
 
                     // Обновление расписания жестом вниз
-                    else if (diffY >= SWIPE_THRESHOLD && abs(velocityY) >= SWIPE_VELOCITY) {
+                    else if (diffY >= SWIPE_THRESHOLD * 10 && velocityY >= SWIPE_VELOCITY * 10) {
                         lifecycleScope.launch {
                             mainActivity.showLoading()
                             loadCloudSchedule()
@@ -388,22 +401,24 @@ class ScheduleFragment : Fragment() {
         val cacheSchedule = schedule
 
         try {
-            val newSchedule = Dnevnik.getSchedule()
+            val response = Dnevnik.getSchedule()
 
             // Если сессия не авторизована, то открывается Login
             // Если произошла ошибка, выводится ошибка
-            if (!newSchedule.status) {
-                if (newSchedule.unauthorized) {
+            if (!response.status || response.answer == null) {
+                if (response.error?.type == "Unauthorized") {
                     val intent = Intent(requireContext(), LoginActivity::class.java)
                     startActivity(intent)
                     // Без закрытия MainActivity по нажатию системной кнопки назад (или жестом)
                     // можно открыть локальное расписания
 //                    mainActivity.finish()
+                } else if (response.error?.errorMessage != null) {
+                    Utilities.showText(requireContext(), response.error.errorMessage)
                 } else {
                     Utilities.showText(requireContext(), R.string.error_api)
                 }
             } else {
-                schedule = newSchedule.schedule  // Сохранение расписания
+                schedule = response.answer.schedule  // Сохранение расписания
             }
         } catch (e: Exception) {
             Utilities.log(e)
@@ -467,7 +482,8 @@ class ScheduleFragment : Fragment() {
                 emptyList(),
                 null,
                 emptyList(),
-                mainActivity
+                mainActivity,
+                gestureDetector
             )
             ui.lessons.layoutManager = LinearLayoutManager(requireContext())
         }

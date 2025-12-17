@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.BuildConfig
-import ru.tgmaksim.gymnasium.api.VersionChecker
+import ru.tgmaksim.gymnasium.api.Status
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.fragment.MarksFragment
@@ -79,43 +79,32 @@ class MainActivity : ParentActivity() {
      * @author Максим Дрючин (tgmaksim)
      * */
     private suspend fun checkVersion() {
-        // Проверка текущей версии
-        val versionStatus = VersionChecker.checkVersion(BuildConfig.VERSION_CODE)
-        CacheManager.versionStatus = versionStatus
+        try {
+            val response = Status.checkVersion()
 
-        // Глобальная версия API больше не поддерживается
-        if (versionStatus.apiVersionDeprecated) {
-            Utilities.showAlertDialog(
-                this,
-                "Срочно требуется обновление",
-                "Похоже, данная версия приложения больше не обслуживается сервером. " +
-                        "Посетите официальный сайт для обновления",
-                "Обновить"
-            ) { _, _ ->
-                Utilities.openUrl(this, BuildConfig.DOMAIN)
-            }
-        }
+            if (!response.status || response.answer == null) {
+                response.error?.let { error ->
+                    Utilities.log(error.type)
+                    error.errorMessage?.let { errorMessage ->
+                        Utilities.showText(this, errorMessage)
+                    }
+                }
 
-        // На сервере обновление: некоторые запросы могут не работать
-        else if (versionStatus.newApiVersion) {
-            Utilities.showAlertDialog(
-                this,
-                "Требуется обновление",
-                "Версия приложения устарела, поэтому некоторые функции могут не работать. " +
-                        "Посетите настройки для обновления",
-                "Настройки"
-            ) { _, _ ->
-                ui.bottomMenu.selectedItemId = R.id.it_settings
+                return
             }
-        }
 
-        if (versionStatus.newLatestVersion) {
-            // Показ красной точки возле иконки настроек
-            ui.bottomMenu.getOrCreateBadge(R.id.it_settings).apply {
-                isVisible = true
-                backgroundColor = Color.RED
-                clearNumber()
+            if (response.answer.latestVersionNumber > BuildConfig.VERSION_CODE) {
+                CacheManager.versionStatus = response.answer
+
+                // Показ красной точки возле иконки настроек
+                ui.bottomMenu.getOrCreateBadge(R.id.it_settings).apply {
+                    isVisible = true
+                    backgroundColor = Color.RED
+                    clearNumber()
+                }
             }
+        } catch (e: Exception) {
+            Utilities.log(e)
         }
     }
 

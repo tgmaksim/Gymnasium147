@@ -4,14 +4,13 @@ import android.content.Context
 import androidx.core.content.edit
 import android.content.SharedPreferences
 
-import ru.tgmaksim.gymnasium.api.VersionStatus
+import ru.tgmaksim.gymnasium.api.VersionsResult
 
 /**
  * Singleton для хранения значений в SharedPreferences (кеш)
  * @author Максим Дрючин (tgmaksim)
  * */
 object CacheManager {
-    private lateinit var context: Context
     private lateinit var prefs: SharedPreferences
 
     private const val PREFS_NAME = "gymnasium_prefs"
@@ -20,18 +19,10 @@ object CacheManager {
     private const val KEY_SCHEDULE = "schedule"
     private const val KEY_OPEN_WEBVIEW = "open_WebView"
     private const val KEY_EA_NOTIFICATIONS = "extracurricular_activities"
+    private const val KEY_FIREBASE_MESSAGING_TOKEN = "firebase_messaging_token"
 
     fun init(context: Context) {
-        this.context = context
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    }
-
-    /**
-     * Выход из аккаунта и очистка пользовательских данных
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    fun logout() {
-        context.deleteSharedPreferences(PREFS_NAME)
     }
 
     /**
@@ -67,7 +58,7 @@ object CacheManager {
     /**
      * Статус текущей версии (не сохраняется в кеше)
      * */
-    var versionStatus: VersionStatus = VersionStatus()
+    var versionStatus: VersionsResult? = null
 
     /**
      * Настройка уведомлений о скором начале внеурочки, по умолчанию - true
@@ -75,4 +66,11 @@ object CacheManager {
     var EANotifications: Boolean
         get() = prefs.getBoolean(KEY_EA_NOTIFICATIONS, true)
         set(value) = prefs.edit { putBoolean(KEY_EA_NOTIFICATIONS, value) }
+
+    /**
+     * Token для работы FirebaseMessaging
+     * */
+    var firebaseMessagingToken: String?
+        get() = prefs.getString(KEY_FIREBASE_MESSAGING_TOKEN, null)
+        set(value) = prefs.edit { putString(KEY_FIREBASE_MESSAGING_TOKEN, value) }
 }
