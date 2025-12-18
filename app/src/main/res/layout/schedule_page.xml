@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:paddingTop="10dp">
 
-    <!-- Название страницы -->
+    <!-- Заголовок страницы -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -17,7 +17,7 @@
 
     <!-- Список дней с горизонтальной прокруткой -->
     <HorizontalScrollView
-        android:id="@+id/dayScroll"
+        android:id="@+id/calendarScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
@@ -25,41 +25,29 @@
         android:scrollbars="none">
 
         <LinearLayout
-            android:id="@+id/dayContainer"
+            android:id="@+id/calendar"
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp" />
+            android:paddingHorizontal="10dp" />
 
     </HorizontalScrollView>
 
-    <!-- Список уроков с вертикальной прокруткой -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/lessons"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="20dp"
-        android:layout_gravity="bottom"
-        android:clipToPadding="false"
-        android:paddingBottom="8dp"
-        android:scrollbars="none" />
+        android:layout_marginTop="20dp">
 
-    <LinearLayout
-        android:id="@+id/weekend_photo"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
+        <!-- Список уроков с вертикальной прокруткой -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/dayPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:overScrollMode="never"
+            android:scrollbars="none" />
 
-        <!-- Фото для выходного дня -->
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:contentDescription="@string/weekend_text"
-            android:src="@drawable/weekend"
-            android:adjustViewBounds="true" />
-
-    </LinearLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </LinearLayout>

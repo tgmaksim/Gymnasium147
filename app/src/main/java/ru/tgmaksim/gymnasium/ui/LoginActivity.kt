@@ -4,20 +4,20 @@ import android.view.View
 import android.os.Bundle
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
+import java.util.concurrent.CancellationException
 
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.Login
 import ru.tgmaksim.gymnasium.api.Request
 import ru.tgmaksim.gymnasium.utilities.Utilities
-import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
-import java.util.concurrent.CancellationException
+import ru.tgmaksim.gymnasium.databinding.ActivityLoginBinding
 
 /**
  * Activity для авторизации пользователя
  * @author Максим Дрючин (tgmaksim)
  * */
 class LoginActivity : ParentActivity() {
-    private lateinit var ui: LayoutLoginBinding
+    private lateinit var ui: ActivityLoginBinding
     companion object {
         var loginUrl: String? = null
     }
@@ -27,7 +27,7 @@ class LoginActivity : ParentActivity() {
         setupActivityTheme()
         super.onCreate(savedInstanceState)
 
-        ui = LayoutLoginBinding.inflate(layoutInflater)
+        ui = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(ui.root)
 
         // Настройка системных полей сверху и снизу
@@ -48,6 +48,8 @@ class LoginActivity : ParentActivity() {
             prepareLogin()
             hideLoading()
         }
+
+        Utilities.log("LoginActivity запущен")
     }
 
     private suspend fun login() {
@@ -55,10 +57,14 @@ class LoginActivity : ParentActivity() {
             val response = Login.login()
 
             if (!response.status || response.answer == null) {
-                response.error?.let { error ->
-                    Utilities.log(error.type)
+                response.error?.let { Utilities.log(it.type) }
 
-                    Utilities.showText(this, error.errorMessage ?: R.string.error_api.toString())
+                if (response.error?.errorMessage != null) {
+                    Utilities.showText(this, response.error.errorMessage)
+                } else if (response.error?.type in listOf("UnauthorizedError", "ValidationError", "ApiMethodNotFoundError")) {
+                    Utilities.showText(this, R.string.error_incorrect_data)
+                } else {
+                    Utilities.showText(this, R.string.error_api)
                 }
 
                 return

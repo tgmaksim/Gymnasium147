@@ -8,11 +8,11 @@
     <string name="sun_text">Тема</string>
     <string name="hello">Приложение школы, которое поможет всегда узнавать о новых оценках и домашнем, не забывать о внеурочных занятиях и быть в курсе всех мероприятий</string>
 
-    <string name="error_start">Произошла ошибка при запуске приложения</string>
     <string name="error_login">Произошла ошибка при попытке авторизоваться</string>
-    <string name="error_api">Произошла ошибка на сервере…</string>
+    <string name="error_api">Произошла ошибка на сервере...</string>
     <string name="error_load_schedule">Произошла ошибка при загрузке расписания</string>
     <string name="error_internet">Нет подключения к интернету</string>
+    <string name="error_incorrect_data">Произошла ошибка при общении с сервером. Обратитесь в поддержку</string>
 
     <string name="default_bells_schedule">08:00 – 09:35</string>
     <string name="default_place">101</string>

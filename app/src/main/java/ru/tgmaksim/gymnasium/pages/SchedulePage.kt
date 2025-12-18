@@ -1,7 +1,6 @@
-package ru.tgmaksim.gymnasium.fragment
+package ru.tgmaksim.gymnasium.pages
 
-import kotlin.math.abs
-import java.util.Locale
+/*import java.util.Locale
 import android.os.Bundle
 import android.view.View
 import java.time.LocalDate
@@ -17,7 +16,6 @@ import android.view.MotionEvent
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
 import android.widget.LinearLayout
-import android.view.GestureDetector
 import android.text.SpannableString
 import androidx.fragment.app.Fragment
 import android.annotation.SuppressLint
@@ -31,6 +29,7 @@ import android.view.animation.AnimationUtils
 import android.text.method.LinkMovementMethod
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.RecyclerView
+import java.util.concurrent.CancellationException
 import androidx.recyclerview.widget.LinearLayoutManager
 
 import ru.tgmaksim.gymnasium.R
@@ -45,9 +44,9 @@ import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
 import ru.tgmaksim.gymnasium.utilities.NotificationManager
+import ru.tgmaksim.gymnasium.databinding.SchedulePageBinding
 import ru.tgmaksim.gymnasium.api.ScheduleExtracurricularActivity
-import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
-import kotlin.coroutines.cancellation.CancellationException
+import ru.tgmaksim.gymnasium.fragments.WebViewFragment
 
 /**
  * Адаптер для списка уроков в расписании определенного дня
@@ -89,7 +88,7 @@ class LessonsAdapter(private var lessons: List<ScheduleLesson>,
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder =
         LessonViewHolder(LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_lesson, parent, false))
+            .inflate(R.layout.schedule_lesson, parent, false))
 
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
         // Для уроков объекты уже загружены
@@ -135,7 +134,7 @@ class LessonsAdapter(private var lessons: List<ScheduleLesson>,
 
         // Строка с гиперссылкой на ресурс с файлами к домашнему заданию (если есть)
         val view = LayoutInflater.from(holder.view.context).inflate(
-            R.layout.item_homework_file,
+            R.layout.schedule_homework_file,
             holder.filesContainer,
             false
         ) as LinearLayout
@@ -214,13 +213,11 @@ class LessonsAdapter(private var lessons: List<ScheduleLesson>,
  * @see ru.tgmaksim.gymnasium.ui.MainActivity
  * */
 class ScheduleFragment : Fragment() {
-    private lateinit var ui: FragmentScheduleBinding
+    private lateinit var ui: SchedulePageBinding
     /** Текущий выбранный день в виде [ItemDayBinding.root] */
     private lateinit var lastSelected: LinearLayout
     /** Объект [MainActivity], в котором находится фрагмент */
     private lateinit var mainActivity: MainActivity
-    /** Объект для обработки жестов */
-    @Suppress("DEPRECATION") private lateinit var gestureDetector: GestureDetectorCompat
 
     companion object {
         private var schedule: List<ScheduleDay>? = null
@@ -229,22 +226,18 @@ class ScheduleFragment : Fragment() {
         private var updateToken: String? = null
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        initGestureDetectorCompat()
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        ui = FragmentScheduleBinding.inflate(inflater, container, false)
+        ui = SchedulePageBinding.inflate(inflater, container, false)
         mainActivity = requireActivity() as MainActivity
 
         // Синхронизация только при первой отрисовке или после входа по ссылке
         val intentData = mainActivity.intent.data
         if (schedule == null || intentData?.getQueryParameter("updateScheduleToken") != updateToken) {
             updateToken = intentData?.getQueryParameter("updateScheduleToken")
+
             lifecycleScope.launch {
                 mainActivity.showLoading()
                 loadCloudSchedule()
@@ -252,7 +245,7 @@ class ScheduleFragment : Fragment() {
             }
         }
 
-        showScheduleCalendar()  // Отображение даты на две недели (15 дней)
+        showScheduleCalendar()  // Отображение даты на 2 недели (15 дней)
         showCacheSchedule()  // Показ расписания из кеша
 
         return ui.root
@@ -260,84 +253,9 @@ class ScheduleFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupFlipping()  // Настройка перелистывания дней жестом
         createRemindEA()  // Создание напоминания на следующее внеурочное занятие
-    }
 
-    /**
-     * Инициализация обработчика жестов для перелистывания дней и обновления расписания
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    private fun initGestureDetectorCompat() {
-        @Suppress("DEPRECATION")
-        gestureDetector = GestureDetectorCompat(requireContext(),
-            object : GestureDetector.SimpleOnGestureListener() {
-                private val SWIPE_THRESHOLD = 80     // минимальная дистанция
-                private val SWIPE_VELOCITY = 80      // минимальная скорость
-
-                override fun onFling(
-                    e1: MotionEvent?,
-                    e2: MotionEvent,
-                    velocityX: Float,
-                    velocityY: Float
-                ): Boolean {
-                    if (e1 == null)
-                        return false
-                    val diffX = e2.x - e1.x  // Расстояние по x
-                    val diffY = e2.y - e1.y  // Расстояние по y
-
-                    // Перелистывание жестом вправо/влево
-                    if (abs(diffX) >= SWIPE_THRESHOLD && abs(velocityX) >= SWIPE_VELOCITY) {
-                        val index = ui.dayContainer.indexOfChild(lastSelected)
-
-                        return if (diffX < 0) {
-                            if (index + 1 < SCHEDULE_LENGTH)
-                                openDay(ui.dayContainer.getChildAt(index + 1) as LinearLayout)
-                            true
-                        } else if (diffX > 0) {
-                            if (index - 1 >= 0)
-                                openDay(ui.dayContainer.getChildAt(index - 1) as LinearLayout)
-                            true
-                        } else {
-                            false
-                        }
-                    }
-
-                    // Обновление расписания жестом вниз
-                    else if (diffY >= SWIPE_THRESHOLD * 10 && velocityY >= SWIPE_VELOCITY * 10) {
-                        lifecycleScope.launch {
-                            mainActivity.showLoading()
-                            loadCloudSchedule()
-                            mainActivity.hideLoading()
-                        }
-                        return true
-                    }
-
-                    return false
-                }
-            })
-    }
-
-    /**
-     * Настройка перелистывания дней жестом с помощью обработчика
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    private fun setupFlipping() {
-        // Перелистывание доступно на списке уроков и фото выходных
-        @SuppressLint("ClickableViewAccessibility")
-        ui.lessons.setOnTouchListener { v, event ->
-            gestureDetector.onTouchEvent(event)
-            if (event.action == MotionEvent.ACTION_UP)
-                v.performClick()
-            false
-        }
-        @SuppressLint("ClickableViewAccessibility")
-        ui.weekendPhoto.setOnTouchListener { v, event ->
-            gestureDetector.onTouchEvent(event)
-            if (event.action == MotionEvent.ACTION_UP)
-                v.performClick()
-            true
-        }
+        Utilities.log("SchedulePage загружена")
     }
 
     /**
@@ -381,7 +299,7 @@ class ScheduleFragment : Fragment() {
             val startTimeEA = it.hoursEA?.let { h -> LocalTime.parse(h.start) } ?: return@find false
 
             it.ea.any() && (date > LocalDate.now() || (date == LocalDate.now() && startTimeEA > LocalTime.now()))
-        } ?: return  // Внеурочек не найдено
+        } ?: return  // Внеурочных занятий не найдено
 
         val startTime = LocalTime.parse(scheduleDay.hoursEA!!.start)
         val timestamp = LocalDate.parse(scheduleDay.date, dateFormat)
@@ -396,7 +314,7 @@ class ScheduleFragment : Fragment() {
             requireContext(),
             NotificationManager.CHANNEL_EA,
             "Внеурочное занятие",
-            "Напоминаю! Через 15 минут начнется внеурочное занятие (${scheduleDay.ea.joinToString { it.subject }})",
+            "Напоминаю! Через 15 минут начнется ${scheduleDay.ea.joinToString { it.subject }}",
             NotificationCompat.PRIORITY_HIGH,
             timestamp,
             NotificationManager.ALARM_REQUEST_CODE_EA
@@ -416,7 +334,9 @@ class ScheduleFragment : Fragment() {
             // Если сессия не авторизована, то открывается Login
             // Если произошла ошибка, выводится ошибка
             if (!response.status || response.answer == null) {
-                if (response.error?.type == "Unauthorized") {
+                response.error?.let { Utilities.log(it.type) }
+
+                if (response.error?.type == "UnauthorizedError") {
                     val intent = Intent(requireContext(), LoginActivity::class.java)
                     startActivity(intent)
                     // Без закрытия MainActivity по нажатию системной кнопки назад (или жестом)
@@ -424,6 +344,8 @@ class ScheduleFragment : Fragment() {
 //                    mainActivity.finish()
                 } else if (response.error?.errorMessage != null) {
                     Utilities.showText(requireContext(), response.error.errorMessage)
+                } else if (response.error?.type in listOf("ValidationError", "ApiMethodNotFoundError")) {
+                    Utilities.showText(requireContext(), R.string.error_incorrect_data)
                 } else {
                     Utilities.showText(requireContext(), R.string.error_api)
                 }
@@ -440,6 +362,8 @@ class ScheduleFragment : Fragment() {
                 Utilities.showText(requireContext(), R.string.error_load_schedule)
             return
         }
+
+        Utilities.log("Успешная загрузка расписания")
 
         // Есть изменения
         if (cacheSchedule != schedule) {
@@ -476,7 +400,9 @@ class ScheduleFragment : Fragment() {
             }
 
             // Определение действия при нажатии
-            item.root.setOnClickListener { openDay(item.root) }
+            item.root.setOnClickListener {
+                openDay(item.root)
+            }
 
             ui.dayContainer.addView(item.root)
         }
@@ -611,3 +537,4 @@ class ScheduleFragment : Fragment() {
             LocalDate.now()
         }
 }
+*/

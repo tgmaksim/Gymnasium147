@@ -1,4 +1,4 @@
-package ru.tgmaksim.gymnasium.fragment
+package ru.tgmaksim.gymnasium.pages
 
 import android.os.Bundle
 import android.view.View
@@ -11,7 +11,7 @@ import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.ui.LoginActivity
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
-import ru.tgmaksim.gymnasium.databinding.FragmentSettingsBinding
+import ru.tgmaksim.gymnasium.databinding.SettingsPageBinding
 
 /**
  * Fragment-страница с настройками приложения
@@ -19,13 +19,16 @@ import ru.tgmaksim.gymnasium.databinding.FragmentSettingsBinding
  * @see ru.tgmaksim.gymnasium.ui.MainActivity
  * */
 class SettingsPage : Fragment() {
-    private lateinit var ui: FragmentSettingsBinding
+    private lateinit var ui: SettingsPageBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        ui = FragmentSettingsBinding.inflate(inflater, container, false)
+        if (::ui.isInitialized)
+            return ui.root
+
+        ui = SettingsPageBinding.inflate(inflater, container, false)
 
         // Установка Switch в нужное положение
         ui.settingsWebViewSwitch.isChecked = CacheManager.openWebView
@@ -57,5 +60,10 @@ class SettingsPage : Fragment() {
         }
 
         return ui.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Utilities.log("SettingsPage загружена")
     }
 }

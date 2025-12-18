@@ -11,5 +11,6 @@ class MessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         CacheManager.firebaseMessagingToken = token
+        Utilities.log("Новый FirebaseMessagingToken: $token")
     }
 }

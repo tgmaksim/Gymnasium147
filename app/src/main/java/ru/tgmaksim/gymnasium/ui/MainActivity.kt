@@ -1,7 +1,6 @@
 package ru.tgmaksim.gymnasium.ui
 
 import android.os.Bundle
-import android.view.View
 import android.graphics.Color
 import kotlinx.coroutines.launch
 import androidx.activity.addCallback
@@ -9,14 +8,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 
 import ru.tgmaksim.gymnasium.R
-import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.api.Status
-import ru.tgmaksim.gymnasium.fragment.MarksPage
-import ru.tgmaksim.gymnasium.fragment.SchoolPage
+import ru.tgmaksim.gymnasium.BuildConfig
+import ru.tgmaksim.gymnasium.pages.MarksPage
+import ru.tgmaksim.gymnasium.pages.SchoolPage
 import ru.tgmaksim.gymnasium.utilities.Utilities
-import ru.tgmaksim.gymnasium.fragment.SettingsPage
+import ru.tgmaksim.gymnasium.pages.SettingsPage
 import ru.tgmaksim.gymnasium.utilities.CacheManager
-import ru.tgmaksim.gymnasium.fragment.ScheduleFragment
+import ru.tgmaksim.gymnasium.pages.schedule.SchedulePage
 import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
 
@@ -26,12 +25,10 @@ import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
  * */
 class MainActivity : ParentActivity() {
     private lateinit var ui: ActivityMainBinding
-    /** Текущая открытая страница */
     private var currentTab = R.id.it_schedule
 
     companion object {
-        var skipAnimation = false
-        /** Фрагменты страниц */
+        private var skipAnimation = false
         private val pages = mutableMapOf<Int, Fragment>()
     }
 
@@ -55,9 +52,11 @@ class MainActivity : ParentActivity() {
             replaceFragment(newMenuPage(currentTab), animation = false)
         }
 
-        // Текущий фрагмент расписания скрыт
+        // Текущий фрагмент расписания скрыт или не существует
         else if ((pages[R.id.it_schedule]?.id ?: 0) == 0) {
-            val scheduleFragment = supportFragmentManager.fragments.find { it is ScheduleFragment }
+            val scheduleFragment = supportFragmentManager.fragments.find { it is SchedulePage }
+
+            // Существует (или нет) другой фрагмент, который нужно добавить или открыть
             if (scheduleFragment == null)
                 replaceFragment(newMenuPage(R.id.it_schedule), animation = false)
             else
@@ -72,6 +71,8 @@ class MainActivity : ParentActivity() {
         lifecycleScope.launch {
             checkVersion()
         }
+
+        Utilities.log("MainActivity запущен")
     }
 
     /**
@@ -93,16 +94,33 @@ class MainActivity : ParentActivity() {
                 return
             }
 
-            if (response.answer.latestVersionNumber > BuildConfig.VERSION_CODE) {
-                CacheManager.versionStatus = response.answer
+            if (response.answer.latestVersionNumber <= BuildConfig.VERSION_CODE)
+                return
 
-                // Показ красной точки возле иконки настроек
-                ui.bottomMenu.getOrCreateBadge(R.id.it_settings).apply {
-                    isVisible = true
-                    backgroundColor = Color.RED
-                    clearNumber()
+            Utilities.log("Обнаружена новая версия: " +
+                    "${response.answer.latestVersionString} (${response.answer.latestVersionNumber})")
+
+            CacheManager.versionStatus = response.answer
+
+            // Показ красной точки возле иконки настроек
+            ui.bottomMenu.getOrCreateBadge(R.id.it_settings).apply {
+                isVisible = true
+                backgroundColor = Color.RED
+                clearNumber()
+            }
+
+            if (response.answer.versionStatus == "Требуется обновление") {
+                Utilities.showAlertDialog(
+                    this,
+                    response.answer.versionStatus,
+                    "Вышло обновление, которое требуется установить для корректной работы приложения",
+                    "Настройки",
+                    true
+                ) { _, _ ->
+                    ui.bottomMenu.selectedItemId = R.id.it_settings
                 }
             }
+
         } catch (e: Exception) {
             Utilities.log(e)
         }
@@ -157,7 +175,7 @@ class MainActivity : ParentActivity() {
             // На странице расписания свой обработчик,
             // но если действие не выполнено, окно сворачивается
             if (ui.bottomMenu.selectedItemId == R.id.it_schedule) {
-                if (!(newMenuPage(R.id.it_schedule) as ScheduleFragment).onBackPressed())
+                if (!(newMenuPage(R.id.it_schedule) as SchedulePage).onBackPressed())
                     moveTaskToBack(true)
             }
 
@@ -210,27 +228,11 @@ class MainActivity : ParentActivity() {
     private fun newMenuPage(itemId: Int): Fragment =
         pages.getOrPut(itemId) {
             when(itemId) {
-                R.id.it_schedule -> ScheduleFragment()
+                R.id.it_schedule -> SchedulePage()
                 R.id.it_marks -> MarksPage()
                 R.id.it_school -> SchoolPage()
                 R.id.it_settings -> SettingsPage()
-                else -> ScheduleFragment()
+                else -> SchedulePage()
             }
         }
-
-    /**
-     * Показ анимации загрузки в левом верхнем углу
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    fun showLoading() {
-        ui.loadingOverlay.visibility = View.VISIBLE
-    }
-
-    /**
-     * Скрытие анимации загрузки в левом верхнем углу
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    fun hideLoading() {
-        ui.loadingOverlay.visibility = View.GONE
-    }
 }

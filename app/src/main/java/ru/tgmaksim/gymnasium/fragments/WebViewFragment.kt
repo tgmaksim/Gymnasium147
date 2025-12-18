@@ -1,9 +1,9 @@
-package ru.tgmaksim.gymnasium.fragment
+package ru.tgmaksim.gymnasium.fragments
 
 import android.os.Bundle
 import android.view.View
-import android.webkit.WebView
 import android.view.ViewGroup
+import android.webkit.WebView
 import android.view.LayoutInflater
 import android.webkit.WebViewClient
 import androidx.activity.addCallback
@@ -11,6 +11,7 @@ import android.webkit.WebChromeClient
 import androidx.fragment.app.Fragment
 
 import ru.tgmaksim.gymnasium.BuildConfig
+import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.databinding.FragmentWebViewBinding
 
 /**
@@ -88,5 +89,10 @@ class WebViewFragment : Fragment() {
         url?.let { ui.webView.loadUrl(it) }
 
         return ui.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Utilities.log("WebViewFragment(url=$url) загружена")
     }
 }

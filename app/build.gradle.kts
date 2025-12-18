@@ -94,6 +94,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.androidx.documentfile)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(platform(libs.firebase.bom))

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Список уроков -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/lessons"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
+        android:scrollbars="none" />
+
+    <!-- Экран выходного -->
+    <LinearLayout
+        android:id="@+id/weekend_photo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/weekend"
+            android:contentDescription="@string/weekend_text"
+            android:adjustViewBounds="true" />
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -40,6 +40,7 @@ class AlarmReceiver : BroadcastReceiver() {
             }
 
             if (channel != null && title != null && message != null && priority != -1) {
+                Utilities.log("Отправлено уведомление $title: $message")
                 NotificationManager.showNotification(
                     context,
                     channel,

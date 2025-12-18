@@ -14,6 +14,8 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        Utilities.log("Загрузка приложения")
+
         // Загрузка CacheManager'а
         CacheManager.init(this)
 
