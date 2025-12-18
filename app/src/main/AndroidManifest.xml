@@ -59,7 +59,7 @@
             android:exported="false" />
 
         <!-- Service для уведомлений -->
-        <service android:name="ru.tgmaksim.gymnasium.utilities.MessagingService"
+        <service android:name=".utilities.MessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

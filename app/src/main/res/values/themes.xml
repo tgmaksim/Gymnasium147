@@ -10,6 +10,8 @@
 
     <style name="Theme.Gymnasium.Splash" parent="Theme.Gymnasium">
         <item name="android:windowBackground">@drawable/bg_gradient</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_round</item>
+        <item name="android:windowSplashScreenBackground">@color/bg_gradient_center</item>
     </style>
 
     <style name="AppDialogTheme" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">

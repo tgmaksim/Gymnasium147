@@ -13,7 +13,7 @@ import ru.tgmaksim.gymnasium.databinding.FragmentSchoolBinding
  * @author Максим Дрючин (tgmaksim)
  * @see ru.tgmaksim.gymnasium.ui.MainActivity
  * */
-class SchoolFragment : Fragment() {
+class SchoolPage : Fragment() {
     private lateinit var ui: FragmentSchoolBinding
 
     override fun onCreateView(

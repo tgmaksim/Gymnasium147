@@ -10,6 +10,7 @@ import ru.tgmaksim.gymnasium.api.Login
 import ru.tgmaksim.gymnasium.api.Request
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.databinding.LayoutLoginBinding
+import java.util.concurrent.CancellationException
 
 /**
  * Activity для авторизации пользователя
@@ -57,16 +58,16 @@ class LoginActivity : ParentActivity() {
                 response.error?.let { error ->
                     Utilities.log(error.type)
 
-                    (error.errorMessage ?: "Произошла ошибка на сервере").let { errorMessage ->
-                        Utilities.showText(this, errorMessage)
-                    }
+                    Utilities.showText(this, error.errorMessage ?: R.string.error_api.toString())
                 }
 
                 return
             }
 
-            Utilities.openUrl(this, response.answer.loginUrl)
-            finish()
+            if (Utilities.openUrl(this, response.answer.loginUrl))
+                finish()
+        } catch (_: CancellationException) {
+
         } catch (e: Exception) {
             Utilities.log(e)
             if (!Request.checkInternet())
@@ -80,7 +81,13 @@ class LoginActivity : ParentActivity() {
         try {
             val response = Login.login()
 
+            response.error?.let {
+                Utilities.log(it.type)
+            }
+
             loginUrl = response.answer?.loginUrl
+        } catch (_: CancellationException) {
+
         } catch (e: Exception) {
             Utilities.log(e)
         }

@@ -18,7 +18,7 @@ import ru.tgmaksim.gymnasium.databinding.FragmentSettingsBinding
  * @author Максим Дрючин (tgmaksim)
  * @see ru.tgmaksim.gymnasium.ui.MainActivity
  * */
-class SettingsFragment : Fragment() {
+class SettingsPage : Fragment() {
     private lateinit var ui: FragmentSettingsBinding
 
     override fun onCreateView(

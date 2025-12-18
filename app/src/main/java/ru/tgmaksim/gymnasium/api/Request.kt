@@ -10,14 +10,11 @@ import io.ktor.util.reflect.typeInfo
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.setBody
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.Serializable
 import io.ktor.serialization.kotlinx.json.json
+import java.util.concurrent.CancellationException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.statement.bodyAsText
 
 import ru.tgmaksim.gymnasium.BuildConfig
-import ru.tgmaksim.gymnasium.utilities.Utilities
-import kotlin.coroutines.cancellation.CancellationException
 
 /** Общие настройки Json для кеша и API-запросов */
 val json = Json {
@@ -39,9 +36,10 @@ val httpClient = HttpClient(CIO) {
 object Request {
     /**
      * Обобщенная функция для осуществления API-запросов с помощью метода POST с входными параметрами
-     * @param path путь к нужному запросу
-     * @param request объект [Serializable] data class с параметрами запроса
-     * @return десериализованный результат запроса
+     * @param path Путь к нужному запросу
+     * @param request Объект [TReq] с параметрами запроса
+     * @return Десериализованный результат запроса в виде [TRes]
+     * @exception Exception
      * @author Максим Дрючин (tgmaksim)
      * */
     suspend inline fun <reified TReq : ApiRequest, reified TRes : ApiResponse> post(
@@ -54,11 +52,16 @@ object Request {
         }.body(typeInfo<TRes>())
     }
 
+    /**
+     * Проверка соединения с интернетом путем попытки подключения к серверу API
+     * @return Статус проверки
+     * @author Максим Дрючин (tgmaksim)
+     * */
     suspend inline fun checkInternet(): Boolean =
         try {
-            httpClient.get(BuildConfig.DOMAIN)
+            httpClient.get(BuildConfig.CHECK_INTERNET_DOMAIN)
             true
         } catch (e: Exception) {
-            e !is CancellationException
+            e is CancellationException
         }
 }

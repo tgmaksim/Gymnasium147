@@ -2,7 +2,6 @@ package ru.tgmaksim.gymnasium
 
 import android.app.Application
 import com.google.firebase.FirebaseApp
-import ru.tgmaksim.gymnasium.api.API_KEY
 import com.google.firebase.messaging.FirebaseMessaging
 
 import ru.tgmaksim.gymnasium.utilities.Utilities
@@ -17,8 +16,6 @@ class App : Application() {
         super.onCreate()
         // Загрузка CacheManager'а
         CacheManager.init(this)
-
-        API_KEY = BuildConfig.API_KEY
 
         // Загрузка Firebase
         FirebaseApp.initializeApp(this)

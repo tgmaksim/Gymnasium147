@@ -20,16 +20,19 @@ object Utilities {
     /**
      * Открытие ссылки в браузере
      * @param context Android-контекст
-     * @param url ссылка
+     * @param url Ссылка для открытия
+     * @return Результат операции
      * @author Максим Дрючин (tgmaksim)
      * */
-    fun openUrl(context: Context, url: String) {
+    fun openUrl(context: Context, url: String): Boolean {
         try {
             val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
             context.startActivity(browserIntent)
+            return true
         } catch (e: ActivityNotFoundException) {
             log(e)
             showText(context, "Не найдено приложение для открытия ссылки")
+            return false
         }
     }
 

@@ -40,7 +40,7 @@ object CacheManager {
         set(value) = prefs.edit { putString(KEY_API_SESSION, value) }
 
     /**
-     * Расписание уроков и внеурочек в JSON-формате
+     * Расписание уроков и внеурочных занятий в JSON-формате
      * */
     var schedule: String?
         get() = prefs.getString(KEY_SCHEDULE, null)
@@ -61,7 +61,7 @@ object CacheManager {
     var versionStatus: VersionsResult? = null
 
     /**
-     * Настройка уведомлений о скором начале внеурочки, по умолчанию - true
+     * Настройка уведомлений о скором начале внеурочного занятия, по умолчанию - true
      * */
     var EANotifications: Boolean
         get() = prefs.getBoolean(KEY_EA_NOTIFICATIONS, true)

@@ -6,7 +6,7 @@ import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
 /**
- * Data-класс для запроса расписания
+ * Запрос расписания на 2 недели (15 дней)
  * @param classId Идентификатор класса
  * @param data Данные сессии
  * @author Максим Дрючин (tgmaksim)
@@ -21,19 +21,19 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 }
 
 /**
- * Data-класс с данными о дополнительном файле к домашнему заданию.
+ * Прикрепленный файл к домашнему заданию
  * @param fileName Название файла
  * @param downloadUrl Ссылка для загрузки файла
  * @author Максим Дрючин (tgmaksim)
  * @see ScheduleLesson
  * */
 @Serializable data class ScheduleHomeworkDocument(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     val fileName: String,
     val downloadUrl: String
 ) : ApiBase() {
     companion object {
-        private const val CLASS_ID = 0x0000000E
+        const val CLASS_ID = 0x0000000E
     }
     init {
         if (classId != CLASS_ID)
@@ -42,19 +42,19 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 }
 
 /**
- * Data-класс с данными об внеурочке
- * @param subject Название предмета внеурочки
- * @param place Кабинет или другое место проведения внеурочки
+ * Внеурочное занятие
+ * @param subject Название предмета внеурочного занятия
+ * @param place Кабинет или другое место проведения внеурочного занятия
  * @author Максим Дрючин (tgmaksim)
  * @see ScheduleDay
  * */
 @Serializable data class ScheduleExtracurricularActivity(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     val subject: String,
     val place: String
 ) : ApiBase() {
     companion object {
-        private const val CLASS_ID = 0x0000000F
+        const val CLASS_ID = 0x0000000F
     }
     init {
         if (classId != CLASS_ID)
@@ -63,32 +63,32 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 }
 
 /**
- * Data-класс с временем урока или внеурочки
- * @param start Начало урока или внеурочки
- * @param end Окончание урока или внеурочки
+ * Время проведения урока или внеурочного занятия
+ * @param start Начало урока или внеурочного занятия
+ * @param end Окончание урока или внеурочного занятия
  * @author Максим Дрючин (tgmaksim)
  * @see ScheduleLesson
  * @see ScheduleExtracurricularActivity
  * */
 @Serializable data class ScheduleHours(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     val start: String,
     val end: String
 ) : ApiBase() {
     companion object {
-        private const val CLASS_ID = 0x00000010
+        const val CLASS_ID = 0x00000010
     }
     init {
         if (classId != CLASS_ID)
             throw ClassCastException()
     }
-    constructor(start: String, end: String) : this(CLASS_ID, start, end)
 
-    fun format(): String = "$start - $end"
+    val stringFormat: String
+        get() = "$start - $end"
 }
 
 /**
- * Data-класс с данными об уроке
+ * Урок
  * @param number Порядковый номер урока начиная с 0
  * @param subject Название предмета урока
  * @param place Кабинет или другое место проведения урока
@@ -99,7 +99,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
  * @see ScheduleDay
  * */
 @Serializable data class ScheduleLesson(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     val number: Int,
     val subject: String,
     val place: String,
@@ -108,43 +108,34 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     val files: List<ScheduleHomeworkDocument>
 ) : ApiBase() {
     companion object {
-        private const val CLASS_ID = 0x00000011
+        const val CLASS_ID = 0x00000011
     }
     init {
         if (classId != CLASS_ID)
             throw ClassCastException()
     }
-
-    constructor(
-        number: Int,
-        subject: String,
-        place: String,
-        hours: ScheduleHours,
-        homework: String? = null,
-        files: List<ScheduleHomeworkDocument> = emptyList()
-    ) : this(CLASS_ID, number, subject, place, hours, homework, files)
 }
 
 /**
- * Data-класс с расписанием на определенный день
+ * День в расписании с уроками и внеурочными занятиями
  * @param date Дата дня в формате [ScheduleDay.DATE_FORMAT]
  * @param lessons Уроки в данный день в виде списка из уроков [ScheduleLesson]
  * @param hoursExtracurricularActivities Часы проведения внеурочек (если есть в данный день) в виде [ScheduleHours]
- * @param extracurricularActivities Внеурочки в данный день (если есть) в виде списка внеурочек [ScheduleExtracurricularActivity]
+ * @param extracurricularActivities Внеурочные занятия в данный день (если есть) в виде списка внеурочек [ScheduleExtracurricularActivity]
  * @property ea Краткое название для [extracurricularActivities]
  * @property hoursEA Краткое название для [hoursExtracurricularActivities]
  * @author Максим Дрючин (tgmaksim)
  * @see ScheduleResult
  * */
 @Serializable data class ScheduleDay(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     val date: String,
     val lessons: List<ScheduleLesson>,
     val hoursExtracurricularActivities: ScheduleHours?,
     val extracurricularActivities: List<ScheduleExtracurricularActivity>
 ) : ApiBase() {
     companion object {
-        private const val CLASS_ID = 0x00000012
+        const val CLASS_ID = 0x00000012
         const val DATE_FORMAT = "yyyy-MM-dd"
     }
     init {
@@ -156,12 +147,18 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     val hoursEA = hoursExtracurricularActivities
 }
 
+/**
+ * Результат запроса расписания на 2 недели (15 дней)
+ * @param classId Идентификатор класса
+ * @param schedule Расписание на 2 недели (15 дней)
+ * @author Максим Дрючин (tgmaksim)
+ * */
 @Serializable data class ScheduleResult(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     val schedule: List<ScheduleDay>
 ) : ApiBase() {
     companion object {
-        private const val CLASS_ID = 0x00000013
+        const val CLASS_ID = 0x00000013
     }
     init {
         if (classId != CLASS_ID)
@@ -170,13 +167,11 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 }
 
 /**
- * Data-класс для результата запроса расписания
+ * Ответ на запрос расписания на 2 недели (15 дней)
  * @property classId Идентификатор класса
  * @property status Статус выполненного запроса
- * @property error Объект ошибки
+ * @property error Объект API-ошибки
  * @property answer Ответ в случае успешной обработки
- * @see Dnevnik.getSchedule
- * @see Dnevnik.getCacheSchedule
  * */
 @Serializable data class ScheduleApiResponse(
     override val classId: Int,
@@ -185,7 +180,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     override val answer: ScheduleResult?
 ) : ApiResponse() {
     companion object {
-        private const val CLASS_ID = 0x00000014
+        const val CLASS_ID = 0x00000014
     }
     init {
         if (classId != CLASS_ID)
@@ -200,12 +195,13 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
  * @author Максим Дрючин (tgmaksim)
  * */
 object Dnevnik {
-    const val PATH_PREFIX = "dnevnik"
-    const val PATH_GET_SCHEDULE = "getSchedule"
+    private const val PATH_PREFIX = "dnevnik"
+    private const val PATH_GET_SCHEDULE = "getSchedule"
 
     /**
-     * Получение актуального расписания запросом на сервер.
-     * @return расписание на 2 недели (15 дней) в виде [Schedule]
+     * Запрос расписания на 2 недели (15 дней)
+     * @return Ответ сервера в виде [ScheduleApiResponse]
+     * @exception Exception
      * @author Максим Дрючин (tgmaksim)
      * */
     suspend fun getSchedule() : ScheduleApiResponse {
@@ -216,26 +212,29 @@ object Dnevnik {
             request
         )
 
-        if (response.status && response.answer != null)
-            CacheManager.schedule = json.encodeToString(response.answer.schedule)
+        // Сохранение расписания в кеш
+        response.answer?.let {
+            CacheManager.schedule = json.encodeToString(it.schedule)
+        }
 
         return response
     }
 
     /**
-     * Получение сохраненного расписания из кеша.
-     * @return расписание на 2 недели (15 дней) в виде списка из [ScheduleDay]
+     * Получение сохраненного расписания из кеша
+     * @return Расписание на 2 недели (15 дней) в виде списка из [ScheduleDay]
      * @author Максим Дрючин (tgmaksim)
      * */
-    fun getCacheSchedule() : List<ScheduleDay> =
-        CacheManager.schedule?.let {
+    fun getCacheSchedule() : List<ScheduleDay> {
+        return CacheManager.schedule?.let {
             try {
-                return json.decodeFromString<List<ScheduleDay>>(it)
+                return@let json.decodeFromString<List<ScheduleDay>>(it)
             } catch (e: Exception) {
                 // При возникновении ошибки десериализации расписание в кеше очищается
                 Utilities.log(e)
                 CacheManager.schedule = null
-                return emptyList()
+                return@let emptyList()
             }
         } ?: emptyList()
+    }
 }

@@ -26,9 +26,9 @@ import ru.tgmaksim.gymnasium.ui.MainActivity
  * @author Максим Дрючин (tgmaksim)
  * */
 object NotificationManager {
-    /** Название канала уведомлений о внеурочках */
+    /** Название канала уведомлений о внеурочных занятиях */
     const val CHANNEL_EA = "extracurricularActivities"
-    /** requestCode для планирования уведомлений для напоминания о внеурочке */
+    /** requestCode для планирования уведомлений для напоминания о внеурочных занятиях */
     const val ALARM_REQUEST_CODE_EA = 1
 
     /**

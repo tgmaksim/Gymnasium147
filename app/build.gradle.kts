@@ -1,6 +1,7 @@
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+// Переменные окружения
 val propsFile = rootProject.file("variables.properties")
 val props = Properties()
 
@@ -8,11 +9,12 @@ if (propsFile.exists()) {
     props.load(propsFile.inputStream())
 }
 
-val buildNumber = props.getProperty("BUILD_NUMBER", "1").toInt()
-val appVersion: String = props.getProperty("APP_VERSION", "0.1.0")
+val buildNumber = props.getProperty("BUILD_NUMBER").toInt()
+val appVersion: String = props.getProperty("APP_VERSION")
 val domain: String = props.getProperty("DOMAIN")
 val apiKey: String = props.getProperty("API_KEY")
 val docsViewUrl: String = props.getProperty("DOCS_VIEW_URL")
+val checkInternetDomain: String = props.getProperty("CHECK_INTERNET_DOMAIN")
 
 // Увеличение номера сборки при каждой компиляции
 val newBuildNumber = buildNumber + 1
@@ -47,6 +49,7 @@ android {
         buildConfigField("String", "DOMAIN", "\"$domain\"")
         buildConfigField("String", "API_KEY", "\"$apiKey\"")
         buildConfigField("String", "DOCS_VIEW_ULR", "\"$docsViewUrl\"")
+        buildConfigField("String", "CHECK_INTERNET_DOMAIN", "\"${checkInternetDomain}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

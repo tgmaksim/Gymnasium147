@@ -39,22 +39,22 @@ import ru.tgmaksim.gymnasium.api.Dnevnik
 import ru.tgmaksim.gymnasium.api.ScheduleDay
 import ru.tgmaksim.gymnasium.ui.MainActivity
 import ru.tgmaksim.gymnasium.ui.LoginActivity
-import ru.tgmaksim.gymnasium.api.ApiSession
 import ru.tgmaksim.gymnasium.api.ScheduleHours
 import ru.tgmaksim.gymnasium.api.ScheduleLesson
 import ru.tgmaksim.gymnasium.utilities.Utilities
-import ru.tgmaksim.gymnasium.api.ScheduleApiRequest
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.ItemDayBinding
-import ru.tgmaksim.gymnasium.api.ScheduleExtracurricularActivity
 import ru.tgmaksim.gymnasium.utilities.NotificationManager
+import ru.tgmaksim.gymnasium.api.ScheduleExtracurricularActivity
 import ru.tgmaksim.gymnasium.databinding.FragmentScheduleBinding
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Адаптер для списка уроков в расписании определенного дня
  * @param lessons уроки в виде списка уроков [ScheduleLesson]
  * @param hoursEA время внеурочек данного дня (если есть) в виде [ScheduleHours]
- * @param ea внеурочки данного дня (если есть) в виде списка внеурочек [ScheduleExtracurricularActivity]
+ * @param ea внеурочные занятия данного дня (если есть)
+ * в виде списка внеурочек [ScheduleExtracurricularActivity]
  * @param mainActivity объект [MainActivity], в котором находится фрагмент
  * @author Максим Дрючин (tgmaksim)
  * @see ScheduleFragment
@@ -108,11 +108,18 @@ class LessonsAdapter(private var lessons: List<ScheduleLesson>,
             val subjects = ea.joinToString("\n") { it.subject }
             val place = ea.joinToString("; ") { it.place }
 
-            ScheduleLesson(position, subjects, place, hoursEA ?: ScheduleHours("00:00", "00:00"))
+            ScheduleLesson(
+                number = position,
+                subject = subjects,
+                place = place,
+                hours = hoursEA ?: ScheduleHours(start = "00:00", end = "00:00"),
+                homework = null,
+                files = emptyList()
+            )
         }
 
         // Заполняется информация в элементе
-        holder.time.text = lesson.hours.format()
+        holder.time.text = lesson.hours.stringFormat
         holder.subject.text = lesson.subject
         holder.place.text = lesson.place
 
@@ -134,7 +141,7 @@ class LessonsAdapter(private var lessons: List<ScheduleLesson>,
         ) as LinearLayout
         holder.filesContainer.removeAllViews()
 
-        // Перелистывание доступно на списке уроков и фото выходных
+        // Перелистывание доступно на каждом элементе
         @SuppressLint("ClickableViewAccessibility")
         holder.view.setOnTouchListener { v, event ->
             gestureDetector.onTouchEvent(event)
@@ -182,7 +189,7 @@ class LessonsAdapter(private var lessons: List<ScheduleLesson>,
      * Обновление расписания
      * @param newLessons новые уроки в виде списка уроков [ScheduleLesson]
      * @param newHoursEA время внеурочек данного дня (если есть) в виде [ScheduleHours]
-     * @param newEA внеурочки данного дня
+     * @param newEA внеурочные занятия данного дня
      * @author Максим Дрючин (tgmaksim)
      * */
     @SuppressLint("NotifyDataSetChanged")
@@ -198,7 +205,7 @@ class LessonsAdapter(private var lessons: List<ScheduleLesson>,
     }
 
     override fun getItemCount(): Int =
-        lessons.size + if (ea.isEmpty()) 0 else 1  // Карточка внеурочки всегда одна, либо ее нет
+        lessons.size + if (ea.isEmpty()) 0 else 1  // Карточка внеурочных занятий всегда одна
 }
 
 /**
@@ -219,6 +226,7 @@ class ScheduleFragment : Fragment() {
         private var schedule: List<ScheduleDay>? = null
         private val dateFormat = DateTimeFormatter.ofPattern(ScheduleDay.DATE_FORMAT)
         private const val SCHEDULE_LENGTH = 15
+        private var updateToken: String? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -234,7 +242,9 @@ class ScheduleFragment : Fragment() {
         mainActivity = requireActivity() as MainActivity
 
         // Синхронизация только при первой отрисовке или после входа по ссылке
-        if (schedule == null || mainActivity.intent.data?.getQueryParameter("updateSchedule") == "true") {
+        val intentData = mainActivity.intent.data
+        if (schedule == null || intentData?.getQueryParameter("updateScheduleToken") != updateToken) {
+            updateToken = intentData?.getQueryParameter("updateScheduleToken")
             lifecycleScope.launch {
                 mainActivity.showLoading()
                 loadCloudSchedule()
@@ -251,7 +261,7 @@ class ScheduleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupFlipping()  // Настройка перелистывания дней жестом
-        createRemindEA()  // Создание напоминания на следующую внеурочку
+        createRemindEA()  // Создание напоминания на следующее внеурочное занятие
     }
 
     /**
@@ -357,7 +367,7 @@ class ScheduleFragment : Fragment() {
     }
 
     /**
-     * Создание напоминания о внеурочке в виде уведомления за несколько минут до начала
+     * Создание напоминания о внеурочном занятии в виде уведомления за несколько минут до начала
      * @author Максим Дрючин (tgmaksim)
      * */
     private fun createRemindEA() {
@@ -365,7 +375,7 @@ class ScheduleFragment : Fragment() {
         if (!CacheManager.EANotifications)
             return
 
-        // Следующая по времени внеурочка (сегодня или в другой день)
+        // Следующее по времени внеурочное занятие (сегодня или в другой день)
         val scheduleDay = schedule?.find {
             val date = LocalDate.parse(it.date, dateFormat)
             val startTimeEA = it.hoursEA?.let { h -> LocalTime.parse(h.start) } ?: return@find false
@@ -386,7 +396,7 @@ class ScheduleFragment : Fragment() {
             requireContext(),
             NotificationManager.CHANNEL_EA,
             "Внеурочное занятие",
-            "Напоминаю! Через 15 минут начнется внеурочка (${scheduleDay.ea.joinToString { it.subject }})",
+            "Напоминаю! Через 15 минут начнется внеурочное занятие (${scheduleDay.ea.joinToString { it.subject }})",
             NotificationCompat.PRIORITY_HIGH,
             timestamp,
             NotificationManager.ALARM_REQUEST_CODE_EA
@@ -420,6 +430,8 @@ class ScheduleFragment : Fragment() {
             } else {
                 schedule = response.answer.schedule  // Сохранение расписания
             }
+        } catch (_: CancellationException) {
+
         } catch (e: Exception) {
             Utilities.log(e)
             if (!Request.checkInternet())

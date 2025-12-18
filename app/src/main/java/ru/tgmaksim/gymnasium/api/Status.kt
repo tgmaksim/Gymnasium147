@@ -3,7 +3,7 @@ package ru.tgmaksim.gymnasium.api
 import kotlinx.serialization.Serializable
 
 /**
- * Data-класс для запроса проверки версии
+ * Запрос данных о последней версии приложения
  * @param classId Идентификатор класса
  * @param data Пустые входные данные
  * @author Максим Дрючин (tgmaksim)
@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
 }
 
 /**
- * Data-класс для результата запроса проверки версии
+ * Результат запроса данных о последней версии приложения
  * @param classId Идентификатор класса
  * @param latestVersionNumber Последняя доступная версия (номер сборки) приложения
  * @param latestVersionString Последняя доступная версия приложения
@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
  * @author Максим Дрючин (tgmaksim)
  * */
 @Serializable data class VersionsResult(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     val latestVersionNumber: Int,
     val latestVersionString: String,
     val date: String,
@@ -36,7 +36,7 @@ import kotlinx.serialization.Serializable
     val updateLogs: String
 ) : ApiBase() {
     companion object {
-        private const val CLASS_ID = 0x00000005
+        const val CLASS_ID = 0x00000005
     }
     init {
         if (classId != CLASS_ID)
@@ -45,21 +45,21 @@ import kotlinx.serialization.Serializable
 }
 
 /**
- * Data-класс для ответа на запрос проверки версии
- * @property classId Идентификатор класса
- * @property status Статус выполненного запроса
- * @property error Объект ошибки
- * @property answer Ответ в случае успешной обработки
+ * Ответ на запрос данных о последней версии приложения
+ * @param classId Идентификатор класса
+ * @param status Статус выполненного запроса
+ * @param error Объект ошибки
+ * @param answer Ответ в случае успешной обработки
  * @author Максим Дрючин (tgmaksim)
  * */
 @Serializable data class VersionsApiResponse(
-    override val classId: Int,
+    override val classId: Int = CLASS_ID,
     override val status: Boolean,
     override val error: ApiError?,
     override val answer: VersionsResult?
 ) : ApiResponse() {
     companion object {
-        private const val CLASS_ID = 0x00000006
+        const val CLASS_ID = 0x00000006
     }
     init {
         if (classId != CLASS_ID && classId != ApiResponse.CLASS_ID)
@@ -68,7 +68,7 @@ import kotlinx.serialization.Serializable
 }
 
 /**
- * API-singleton для проверки версии приложения
+ * API-singleton для запросов группы status
  * @property PATH_STATUS Название группы API-запросов
  * @property PATH_CHECK_VERSION Название API-запроса для проверки версии
  * @author Максим Дрючин (tgmaksim)
@@ -78,8 +78,9 @@ object Status {
     private const val PATH_CHECK_VERSION = "checkVersion"
 
     /**
-     * Проверка версии приложения
-     * @return статус текущей версии приложения в виде [VersionsResult]
+     * Получение данных о последней доступной версии приложения
+     * @return Ответ сервера в виде [VersionsApiResponse]
+     * @exception Exception
      * @author Максим Дрючин (tgmaksim)
      * */
     suspend fun checkVersion(): VersionsApiResponse {

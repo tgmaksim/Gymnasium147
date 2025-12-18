@@ -11,12 +11,12 @@ import androidx.lifecycle.lifecycleScope
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.api.Status
+import ru.tgmaksim.gymnasium.fragment.MarksPage
+import ru.tgmaksim.gymnasium.fragment.SchoolPage
 import ru.tgmaksim.gymnasium.utilities.Utilities
+import ru.tgmaksim.gymnasium.fragment.SettingsPage
 import ru.tgmaksim.gymnasium.utilities.CacheManager
-import ru.tgmaksim.gymnasium.fragment.MarksFragment
-import ru.tgmaksim.gymnasium.fragment.SchoolFragment
 import ru.tgmaksim.gymnasium.fragment.ScheduleFragment
-import ru.tgmaksim.gymnasium.fragment.SettingsFragment
 import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
 
@@ -32,7 +32,7 @@ class MainActivity : ParentActivity() {
     companion object {
         var skipAnimation = false
         /** Фрагменты страниц */
-        private val fragments = mutableMapOf<Int, Fragment>()
+        private val pages = mutableMapOf<Int, Fragment>()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,17 +51,17 @@ class MainActivity : ParentActivity() {
 
         // После перерисовки текущий fragment сам отрисуется
         if (savedInstanceState == null) {
-            fragments.clear()
+            pages.clear()
             replaceFragment(newMenuPage(currentTab), animation = false)
         }
 
         // Текущий фрагмент расписания скрыт
-        else if ((fragments[R.id.it_schedule]?.id ?: 0) == 0) {
+        else if ((pages[R.id.it_schedule]?.id ?: 0) == 0) {
             val scheduleFragment = supportFragmentManager.fragments.find { it is ScheduleFragment }
             if (scheduleFragment == null)
                 replaceFragment(newMenuPage(R.id.it_schedule), animation = false)
             else
-                fragments[R.id.it_schedule] = scheduleFragment
+                pages[R.id.it_schedule] = scheduleFragment
         }
 
         setupMenuListener()  // Настройка нажатий на пункты меню
@@ -141,17 +141,18 @@ class MainActivity : ParentActivity() {
      * Настройка нажатия на кнопку смены темы
      * @author Максим Дрючин (tgmaksim)
      * */
-    private fun setupButtonThemeListener() =
+    private fun setupButtonThemeListener() {
         ui.buttonTheme.setOnClickListener {
             CacheManager.isDarkTheme = CacheManager.isDarkTheme.not()
             setupActivityTheme()
         }
+    }
 
     /**
      * Настройка нажатий на системную кнопку назад (или жестом)
      * @author Максим Дрючин (tgmaksim)
      * */
-    private fun setupBackListener() =
+    private fun setupBackListener() {
         onBackPressedDispatcher.addCallback(this) {
             // На странице расписания свой обработчик,
             // но если действие не выполнено, окно сворачивается
@@ -165,6 +166,7 @@ class MainActivity : ParentActivity() {
                 ui.bottomMenu.selectedItemId = R.id.it_schedule
             }
         }
+    }
 
     /**
      * Смена страницы с анимацией перехода
@@ -206,12 +208,12 @@ class MainActivity : ParentActivity() {
      * @author Максим Дрючин (tgmaksim)
      * */
     private fun newMenuPage(itemId: Int): Fragment =
-        fragments.getOrPut(itemId) {
+        pages.getOrPut(itemId) {
             when(itemId) {
                 R.id.it_schedule -> ScheduleFragment()
-                R.id.it_marks -> MarksFragment()
-                R.id.it_school -> SchoolFragment()
-                R.id.it_settings -> SettingsFragment()
+                R.id.it_marks -> MarksPage()
+                R.id.it_school -> SchoolPage()
+                R.id.it_settings -> SettingsPage()
                 else -> ScheduleFragment()
             }
         }
