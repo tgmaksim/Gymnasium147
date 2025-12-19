@@ -61,10 +61,10 @@ object CacheManager {
     var versionStatus: VersionsResult? = null
 
     /**
-     * Настройка уведомлений о скором начале внеурочного занятия, по умолчанию - true
+     * Настройка уведомлений о скором начале внеурочного занятия, по умолчанию - false
      * */
     var EANotifications: Boolean
-        get() = prefs.getBoolean(KEY_EA_NOTIFICATIONS, true)
+        get() = prefs.getBoolean(KEY_EA_NOTIFICATIONS, false)
         set(value) = prefs.edit { putBoolean(KEY_EA_NOTIFICATIONS, value) }
 
     /**

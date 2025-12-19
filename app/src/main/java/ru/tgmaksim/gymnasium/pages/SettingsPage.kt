@@ -9,8 +9,11 @@ import androidx.fragment.app.Fragment
 
 import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.ui.LoginActivity
+import ru.tgmaksim.gymnasium.ui.ParentActivity
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
+import ru.tgmaksim.gymnasium.pages.schedule.SchedulePage
+import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.SettingsPageBinding
 
 /**
@@ -20,38 +23,65 @@ import ru.tgmaksim.gymnasium.databinding.SettingsPageBinding
  * */
 class SettingsPage : Fragment() {
     private lateinit var ui: SettingsPageBinding
+    private var isDarkTheme: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        if (::ui.isInitialized)
+        if (::ui.isInitialized && CacheManager.isDarkTheme == isDarkTheme)
             return ui.root
 
         ui = SettingsPageBinding.inflate(inflater, container, false)
+        isDarkTheme = CacheManager.isDarkTheme
 
         // Установка Switch в нужное положение
-        ui.settingsWebViewSwitch.isChecked = CacheManager.openWebView
-        ui.settingsEANotificationsSwitch.isChecked = CacheManager.EANotifications
+        ui.settingsWebView.isChecked = CacheManager.openWebView
+        ui.settingsEANotifications.isChecked = CacheManager.EANotifications
+        ui.settingsTheme.isChecked = CacheManager.isDarkTheme
 
-        ui.settingsWebViewSwitch.setOnCheckedChangeListener { _, isChecked ->
+        ui.settingsWebView.setOnCheckedChangeListener { _, isChecked ->
             CacheManager.openWebView = isChecked
         }
-        ui.settingsEANotificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            CacheManager.EANotifications = isChecked
-            // TODO: проверить разрешения
+        ui.settingsEANotifications.setOnCheckedChangeListener { switch, isChecked ->
+            if (!isChecked) {
+                CacheManager.EANotifications = false
+                return@setOnCheckedChangeListener
+            }
+
+            val context = requireContext()
+            if (NotificationManager.checkPermission(context) && NotificationManager.canScheduleExactAlarms(context)) {
+                CacheManager.EANotifications = true
+                SchedulePage.createRemindEA(context)
+            } else {
+                switch.isChecked = false
+                NotificationManager.setupPostNotifications(requireActivity())
+            }
+        }
+        ui.settingsTheme.setOnCheckedChangeListener { _, isChecked ->
+            if (CacheManager.isDarkTheme != isChecked) {
+                CacheManager.isDarkTheme = isChecked
+                (requireActivity() as ParentActivity).setupActivityTheme()
+            }
         }
 
         CacheManager.versionStatus?.let {
             ui.updateApplication.visibility = View.VISIBLE
-            ui.updateDescription.text = "${it.latestVersionString} (${it.latestVersionNumber})\n${it.updateLogs}"
+            ui.updateDescription.text = StringBuilder(it.latestVersionString).apply {
+                append(' ')
+                append("(${it.latestVersionNumber})")
+                append('\n')
+                append(it.updateLogs)
+            }.toString()
         }
 
         // Нажатие на кнопку обновления
         ui.buttonUpdate.setOnClickListener {
             Utilities.openUrl(requireContext(), BuildConfig.DOMAIN)
         }
-
+        ui.buttonOpenSite.setOnClickListener {
+            Utilities.openUrl(requireContext(), BuildConfig.DOMAIN)
+        }
         ui.buttonLogout.setOnClickListener {
             CacheManager.apiSession = null
             val intent = Intent(requireContext(), LoginActivity::class.java)

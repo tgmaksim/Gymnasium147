@@ -5,6 +5,9 @@ import android.content.Context
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import android.content.BroadcastReceiver
+import androidx.core.app.NotificationCompat
+
+import ru.tgmaksim.gymnasium.api.ScheduleExtracurricularActivity
 
 /**
  * Receiver для уведомлений-напоминаний
@@ -13,6 +16,32 @@ import android.content.BroadcastReceiver
 class AlarmReceiver : BroadcastReceiver() {
     companion object {
         const val MAX_TIMEOUT = 15 * 60 * 1000  // 15 минут в миллисекундах
+
+        /**
+         * Создание напоминания о внеурочном занятии
+         * @param context Android-context для создания напоминания
+         * @param ea Список внеурочных занятий, к=о которых необходимо напомнить
+         * @param eaStart Дата и время начала внеурочного занятия
+         * @author Максим Дрючин (tgmaksim)
+         * */
+        fun createRemindEA(context: Context, ea: List<ScheduleExtracurricularActivity>, eaStart: LocalDateTime) {
+            val timestamp = eaStart
+                .minusMinutes(15)  // За 15 минут до начала
+                .toInstant(ZonedDateTime.now().offset)
+                .toEpochMilli()
+
+            NotificationManager.addAlarmNotification(
+                context,
+                NotificationManager.CHANNEL_EA,
+                "Внеурочное занятие",
+                "Напоминаю! Через 15 минут начнется ${ea.joinToString { it.subject }}",
+                NotificationCompat.PRIORITY_HIGH,
+                timestamp,
+                NotificationManager.ALARM_REQUEST_CODE_EA
+            )
+
+            Utilities.log("Создано напоминание на $timestamp")
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -50,7 +79,5 @@ class AlarmReceiver : BroadcastReceiver() {
                 )
             }
         }
-
-        // TODO: добавить новое напоминание о внеурочном занятии
     }
 }

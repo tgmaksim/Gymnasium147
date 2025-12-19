@@ -40,11 +40,11 @@ open class ParentActivity : AppCompatActivity() {
         // Установка отступа сверху на высоту системной панели
         ViewCompat.setOnApplyWindowInsetsListener(contentContainer) { v, insets ->
             val topInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            if (contentContainer::class == FrameLayout::class) {
+            if (contentContainer is FrameLayout) {
                 v.updateLayoutParams<RelativeLayout.LayoutParams> {
                     topMargin = topInset
                 }
-            } else if (contentContainer::class == LinearLayout::class) {
+            } else if (contentContainer is LinearLayout) {
                 v.updateLayoutParams<FrameLayout.LayoutParams> {
                     topMargin = topInset
                 }

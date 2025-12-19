@@ -1,113 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:fillViewport="true">
 
-    <!-- Название страницы -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/menu_item_settings"
-        android:textSize="30sp"
-        android:layout_gravity="top|center_horizontal"
-        android:layout_marginTop="10dp"
-        android:fontFamily="sans-serif-medium"
-        android:textColor="@color/text_primary" />
-
-    <!-- Настройка: открывать файлы в приложении -->
     <LinearLayout
-        android:id="@+id/settings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:layout_gravity="top"
-        android:layout_marginTop="10dp">
+        android:padding="16dp">
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/settingsWebViewSwitch"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:layout_weight="1"
-            android:text="@string/settings_webview"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif"
-            android:textColor="@color/text_primary" />
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_card">
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/settingsEANotificationsSwitch"
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/settings"
+                android:textSize="18sp"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/settingsWebView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_webview"
+                android:checked="true"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/settingsEANotifications"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_ea"
+                android:checked="false"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/settingsTheme"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_theme"
+                android:checked="false"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/updateApplication"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:layout_weight="1"
-            android:text="@string/settings_ea"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif"
-            android:textColor="@color/text_primary" />
+            android:visibility="gone"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/buttonLogout"
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/update"
+                android:textSize="20sp"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/updateDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/important_update"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/buttonUpdate"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/update_button"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_button_update" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:layout_marginTop="10dp"
-            android:text="Выйти из профиля"
-            android:textColor="@color/text_primary"
-            android:textSize="12sp"
-            android:fontFamily="sans-serif-medium"
-            android:background="@drawable/bg_button_update" />
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/account"
+                android:textSize="18sp"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/account_info"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/buttonLogout"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/logout"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_button_update" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/about"
+                android:textSize="18sp"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_info"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/buttonOpenSite"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/open_site"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_button_update" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Блок обновления приложения -->
-    <LinearLayout
-        android:id="@+id/updateApplication"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
-        android:paddingHorizontal="16dp"
-        android:layout_gravity="top">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/update"
-            android:textSize="25sp"
-            android:textColor="@color/text_primary"
-            android:fontFamily="sans-serif-medium"
-            android:padding="10dp"
-            android:layout_marginTop="20dp"
-            android:gravity="center" />
-
-        <!-- Многострочный текст с новыми функциями -->
-        <TextView
-            android:id="@+id/updateDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/important_update"
-            android:textSize="15sp"
-            android:textColor="@color/text_primary"
-            android:fontFamily="sans-serif"
-            android:padding="8dp"
-            android:background="@drawable/bg_text_update"
-            android:gravity="start"
-            android:lineSpacingExtra="4dp" />
-
-        <!-- Кнопка установки -->
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/buttonUpdate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:layout_marginTop="10dp"
-            android:text="@string/update_button"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif-medium"
-            android:background="@drawable/bg_button_update" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</ScrollView>

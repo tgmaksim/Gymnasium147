@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.databinding.SchoolPageBinding
+import ru.tgmaksim.gymnasium.utilities.CacheManager
 
 /**
  * Страница с мероприятиями и другими событиями и объявлениями школы
@@ -16,15 +17,17 @@ import ru.tgmaksim.gymnasium.databinding.SchoolPageBinding
  * */
 class SchoolPage : Fragment() {
     private lateinit var ui: SchoolPageBinding
+    private var isDarkTheme: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        if (::ui.isInitialized)
+        if (::ui.isInitialized && CacheManager.isDarkTheme == isDarkTheme)
             return ui.root
 
         ui = SchoolPageBinding.inflate(inflater, container, false)
+        isDarkTheme = CacheManager.isDarkTheme
 
         return ui.root
     }

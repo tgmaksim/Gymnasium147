@@ -16,7 +16,6 @@ import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.pages.SettingsPage
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.pages.schedule.SchedulePage
-import ru.tgmaksim.gymnasium.utilities.NotificationManager
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
 
 /**
@@ -43,9 +42,6 @@ class MainActivity : ParentActivity() {
         // Настройка системных полей сверху и снизу
         setupSystemBars(ui.contentContainer)
 
-        // Запрос разрешений на уведомления и напоминаний
-        NotificationManager.setupPostNotifications(this)
-
         // После перерисовки текущий fragment сам отрисуется
         if (savedInstanceState == null) {
             pages.clear()
@@ -56,15 +52,11 @@ class MainActivity : ParentActivity() {
         else if ((pages[R.id.it_schedule]?.id ?: 0) == 0) {
             val scheduleFragment = supportFragmentManager.fragments.find { it is SchedulePage }
 
-            // Существует (или нет) другой фрагмент, который нужно добавить или открыть
-            if (scheduleFragment == null)
-                replaceFragment(newMenuPage(R.id.it_schedule), animation = false)
-            else
+            if (scheduleFragment != null)
                 pages[R.id.it_schedule] = scheduleFragment
         }
 
         setupMenuListener()  // Настройка нажатий на пункты меню
-        setupButtonThemeListener()  // Настройка кнопки смены темы
         setupBackListener()  // Настройка нажатий на системную кнопку назад (или жестом)
 
         // Проверка текущей версии приложения
@@ -152,17 +144,6 @@ class MainActivity : ParentActivity() {
             // Сохраняется открытая страница
             currentTab = item.itemId
             true
-        }
-    }
-
-    /**
-     * Настройка нажатия на кнопку смены темы
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    private fun setupButtonThemeListener() {
-        ui.buttonTheme.setOnClickListener {
-            CacheManager.isDarkTheme = CacheManager.isDarkTheme.not()
-            setupActivityTheme()
         }
     }
 

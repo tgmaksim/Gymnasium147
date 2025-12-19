@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import androidx.fragment.app.Fragment
 
 import ru.tgmaksim.gymnasium.utilities.Utilities
+import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.databinding.MarksPageBinding
 
 /**
@@ -16,15 +17,17 @@ import ru.tgmaksim.gymnasium.databinding.MarksPageBinding
  * */
 class MarksPage : Fragment() {
     private lateinit var ui: MarksPageBinding
+    private var isDarkTheme: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        if (::ui.isInitialized)
+        if (::ui.isInitialized && CacheManager.isDarkTheme == isDarkTheme)
             return ui.root
 
         ui = MarksPageBinding.inflate(inflater, container, false)
+        isDarkTheme = CacheManager.isDarkTheme
 
         return ui.root
     }

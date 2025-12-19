@@ -7,14 +7,13 @@ import java.time.LocalDate
 import java.time.LocalTime
 import android.content.Intent
 import android.view.ViewGroup
-import java.time.ZonedDateTime
+import android.content.Context
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import java.time.format.DateTimeFormatter
-import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.RecyclerView
 import java.util.concurrent.CancellationException
 import androidx.recyclerview.widget.PagerSnapHelper
@@ -27,7 +26,7 @@ import ru.tgmaksim.gymnasium.api.ScheduleDay
 import ru.tgmaksim.gymnasium.ui.LoginActivity
 import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
-import ru.tgmaksim.gymnasium.utilities.NotificationManager
+import ru.tgmaksim.gymnasium.utilities.AlarmReceiver
 import ru.tgmaksim.gymnasium.databinding.SchedulePageBinding
 import ru.tgmaksim.gymnasium.databinding.ScheduleCalendarDayBinding
 
@@ -38,6 +37,7 @@ import ru.tgmaksim.gymnasium.databinding.ScheduleCalendarDayBinding
  * */
 class SchedulePage : Fragment() {
     private lateinit var ui: SchedulePageBinding
+    private var isDarkTheme: Boolean = false
     /** Текущий выбранный день в виде [ScheduleCalendarDayBinding.root] */
     private lateinit var lastSelected: LinearLayout
 
@@ -46,6 +46,32 @@ class SchedulePage : Fragment() {
         private val dateFormat = DateTimeFormatter.ofPattern(ScheduleDay.DATE_FORMAT)
         private const val SCHEDULE_LENGTH = 15
         private var updateToken: String? = null
+
+        /**
+         * Создание напоминания о внеурочном занятии в виде уведомления за несколько минут до начала
+         * @param context Android-context
+         * @author Максим Дрючин (tgmaksim)
+         * */
+        fun createRemindEA(context: Context) {
+            // Следующее по времени внеурочное занятие (сегодня или в другой день)
+            val scheduleDay = schedule?.find {
+                val date = LocalDate.parse(it.date, dateFormat)
+                val startTimeEA = it.hoursEA?.let { h -> LocalTime.parse(h.start) } ?: return@find false
+
+                it.ea.any() && (date > LocalDate.now() || (date == LocalDate.now() && startTimeEA > LocalTime.now()))
+            } ?: return  // Внеурочных занятий не найдено
+
+            val startTime = LocalTime.parse(scheduleDay.hoursEA!!.start)
+            AlarmReceiver.createRemindEA(
+                context,
+                scheduleDay.ea,
+                LocalDate
+                    .parse(scheduleDay.date, dateFormat)
+                    .atStartOfDay()
+                    .plusHours(startTime.hour.toLong())
+                    .plusMinutes(startTime.minute.toLong())
+            )
+        }
     }
 
     override fun onCreateView(
@@ -53,10 +79,11 @@ class SchedulePage : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         // При смене страниц ui сохраняется
-        if (::ui.isInitialized)
+        if (::ui.isInitialized && CacheManager.isDarkTheme == isDarkTheme)
             return ui.root
 
         ui = SchedulePageBinding.inflate(inflater, container, false)
+        isDarkTheme = CacheManager.isDarkTheme
 
         // Синхронизация только при первой отрисовке или после входа по ссылке
         val intentData = requireActivity().intent.data
@@ -72,7 +99,6 @@ class SchedulePage : Fragment() {
 
         showScheduleCalendar()  // Отображение даты на 2 недели (15 дней)
         showCacheSchedule()  // Показ расписания из кеша
-        createRemindEA()  // Создание напоминания на следующее внеурочное занятие
 
         return ui.root
     }
@@ -103,21 +129,21 @@ class SchedulePage : Fragment() {
         // Выбор активного дня: до 15:00 - текущий, после - следующий
         if (LocalTime.now().hour > 15)
             ui.dayPager.scrollToPosition(1)  // Прокрутка без анимации
+        else
+            ui.dayPager.scrollToPosition(0)  // Возвращение в начальное положение
 
         // Инициализация обработчика для смены активного дня в календаре
         ui.dayPager.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
 
-                // Прокрутка завершена, а не находится в промежуточном состоянии
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    val snappedView = snapHelper.findSnapView(layoutManager)
-                    val position = snappedView?.let {
-                        layoutManager.getPosition(it)
-                    } ?: return
+                // Выбор активного дня в мини-календаре в процессе и после перелистывания
+                val snappedView = snapHelper.findSnapView(layoutManager)
+                val position = snappedView?.let {
+                    layoutManager.getPosition(it)
+                } ?: return
 
-                    selectItemCalendar(ui.calendar.getChildAt(position) as LinearLayout)
-                }
+                selectItemCalendar(ui.calendar.getChildAt(position) as LinearLayout)
             }
         })
 
@@ -165,48 +191,11 @@ class SchedulePage : Fragment() {
     }
 
     /**
-     * Создание напоминания о внеурочном занятии в виде уведомления за несколько минут до начала
-     * @author Максим Дрючин (tgmaksim)
-     * */
-    private fun createRemindEA() {
-        // Функция выключена в настройках
-        if (!CacheManager.EANotifications)
-            return
-
-        // Следующее по времени внеурочное занятие (сегодня или в другой день)
-        val scheduleDay = schedule?.find {
-            val date = LocalDate.parse(it.date, dateFormat)
-            val startTimeEA = it.hoursEA?.let { h -> LocalTime.parse(h.start) } ?: return@find false
-
-            it.ea.any() && (date > LocalDate.now() || (date == LocalDate.now() && startTimeEA > LocalTime.now()))
-        } ?: return  // Внеурочных занятий не найдено
-
-        val startTime = LocalTime.parse(scheduleDay.hoursEA!!.start)
-        val timestamp = LocalDate.parse(scheduleDay.date, dateFormat)
-            .atStartOfDay()
-            .plusHours(startTime.hour.toLong())
-            .plusMinutes(startTime.minute.toLong())
-            .minusMinutes(15)  // За 15 минут до начала
-            .toInstant(ZonedDateTime.now().offset)
-            .toEpochMilli()
-
-        NotificationManager.addAlarmNotification(
-            requireContext(),
-            NotificationManager.CHANNEL_EA,
-            "Внеурочное занятие",
-            "Напоминаю! Через 15 минут начнется ${scheduleDay.ea.joinToString { it.subject }}",
-            NotificationCompat.PRIORITY_HIGH,
-            timestamp,
-            NotificationManager.ALARM_REQUEST_CODE_EA
-        )
-    }
-
-    /**
      * Загрузка актуального расписания API-запросом на сервер. Инициализация [schedule]
      * @author Максим Дрючин (tgmaksim)
      * */
     private suspend fun loadCloudSchedule() {
-        val cacheSchedule = schedule
+        val cacheSchedule = schedule.hashCode()
 
         try {
             val response = Dnevnik.getSchedule()
@@ -217,6 +206,8 @@ class SchedulePage : Fragment() {
                 response.error?.let { Utilities.log(it.type) }
 
                 if (response.error?.type == "UnauthorizedError") {
+                    response.error.errorMessage?.let { Utilities.showText(requireContext(), it) }
+
                     val intent = Intent(requireContext(), LoginActivity::class.java)
                     startActivity(intent)
                     // Без закрытия MainActivity по нажатию системной кнопки назад (или жестом)
@@ -233,7 +224,8 @@ class SchedulePage : Fragment() {
                 schedule = response.answer.schedule  // Сохранение расписания
             }
         } catch (_: CancellationException) {
-
+            ui.swipeRefresh.isRefreshing = false
+            return
         } catch (e: Exception) {
             Utilities.log(e)
             if (!Request.checkInternet())
@@ -246,11 +238,12 @@ class SchedulePage : Fragment() {
         Utilities.log("Успешная загрузка расписания")
 
         // Есть изменения
-        if (cacheSchedule != schedule)
+        if (cacheSchedule != schedule.hashCode()) {
             schedule?.let {
                 (ui.dayPager.adapter as DayPagerAdapter).updateSchedule(it)
-                createRemindEA()
             }
+        }
+        createRemindEA(requireContext())  // Напоминание о новых внеурочных занятиях
     }
 
     /**
