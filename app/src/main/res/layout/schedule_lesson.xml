@@ -10,50 +10,79 @@
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Верхняя часть карточки: время и кабинет -->
+    <!-- Верхняя часть -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <!-- Время урока -->
-        <TextView
-            android:id="@+id/time"
-            android:layout_width="wrap_content"
+        <!-- Левая часть: время, место и предмет -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/default_bells_schedule"
-            android:textSize="14sp"
-            android:textColor="@color/lesson_time"
-            android:fontFamily="sans-serif-medium" />
+            android:layout_weight="2"
+            android:orientation="vertical">
 
-        <!-- Кабинет или другое место проведения -->
-        <TextView
-            android:id="@+id/place"
-            android:layout_width="wrap_content"
+            <!-- Время и место -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Время -->
+                <TextView
+                    android:id="@+id/time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/default_bells_schedule"
+                    android:textSize="14sp"
+                    android:textColor="@color/lesson_time"
+                    android:fontFamily="sans-serif-medium" />
+
+                <!-- Кабинет или другое место -->
+                <TextView
+                    android:id="@+id/place"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/default_place"
+                    android:layout_marginStart="10dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/lesson_place" />
+
+            </LinearLayout>
+
+            <!-- Название предмета -->
+            <TextView
+                android:id="@+id/subject"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/default_subject"
+                android:layout_marginTop="4dp"
+                android:textSize="18sp"
+                android:textColor="@color/lesson_subject"
+                android:fontFamily="sans-serif-medium" />
+
+        </LinearLayout>
+
+        <!-- Правая часть: оценки и отметки о посещаемости урока -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/logs"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/default_place"
-            android:textSize="14sp"
-            android:textColor="@color/lesson_place"
-            android:layout_marginStart="10dp" />
+            android:layout_weight="1"
+            android:overScrollMode="never"
+            android:scrollbars="none"
+            android:orientation="horizontal" />
 
     </LinearLayout>
 
-    <!-- Название предмета -->
-    <TextView
-        android:id="@+id/subject"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/default_subject"
-        android:textSize="18sp"
-        android:textColor="@color/lesson_subject"
-        android:fontFamily="sans-serif-medium"
-        android:layout_marginTop="4dp" />
-
+    <!-- Домашнее задание -->
     <LinearLayout
         android:id="@+id/homeworkGroup"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp">
 
         <!-- Эмодзи домашнего задания -->
         <TextView
@@ -68,18 +97,19 @@
             android:id="@+id/homework"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textIsSelectable="true"
             android:layout_marginStart="5dp"
             android:text="@string/homework_not_found"
             android:textSize="14sp"
             android:textColor="@color/lesson_homework_text"
             android:fontFamily="sans-serif"
-            android:layout_marginTop="2dp"
             android:lineSpacingExtra="2dp"
             android:maxLines="10"
             android:ellipsize="end" />
 
     </LinearLayout>
 
+    <!-- Файлы к домашнему заданию -->
     <LinearLayout
         android:id="@+id/filesContainer"
         android:layout_width="match_parent"

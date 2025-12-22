@@ -1,7 +1,10 @@
 package ru.tgmaksim.gymnasium.ui
 
 import android.os.Bundle
+import android.graphics.Rect
 import android.graphics.Color
+import android.widget.TextView
+import android.view.MotionEvent
 import kotlinx.coroutines.launch
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
@@ -12,8 +15,8 @@ import ru.tgmaksim.gymnasium.api.Status
 import ru.tgmaksim.gymnasium.BuildConfig
 import ru.tgmaksim.gymnasium.pages.MarksPage
 import ru.tgmaksim.gymnasium.pages.SchoolPage
-import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.pages.SettingsPage
+import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 import ru.tgmaksim.gymnasium.pages.schedule.SchedulePage
 import ru.tgmaksim.gymnasium.databinding.ActivityMainBinding
@@ -65,6 +68,24 @@ class MainActivity : ParentActivity() {
         }
 
         Utilities.log("MainActivity запущен")
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action != MotionEvent.ACTION_DOWN)
+            return super.dispatchTouchEvent(event)
+
+        // При нажатии на любую область вне TextView с возможным выделением текста,
+        // фокус сбрасывается
+        val el = currentFocus
+        if (el is TextView) {
+            val outRect = Rect()
+            el.getGlobalVisibleRect(outRect)
+
+            if (!outRect.contains(event.rawX.toInt(), event.rawY.toInt()))
+                el.clearFocus()
+        }
+
+        return super.dispatchTouchEvent(event)
     }
 
     /**

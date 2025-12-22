@@ -16,7 +16,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     override val data: ApiSession?
 ) : ApiRequest() {
     companion object {
-        const val CLASS_ID = 0x0000000D
+        const val CLASS_ID = 0x00000015
     }
 }
 
@@ -87,12 +87,58 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
         get() = "$start - $end"
 }
 
+
+/**
+ * Оценка другого ученика
+ * @param name Имя и первая буква фамилии ученика
+ * @param mark Оценка
+ * @param mood Тип оценки: хороший, средний или плохой
+ * @author Максим Дрючин (tgmaksim)
+ * */
+@Serializable data class ScheduleOtherMark(
+    override val classId: Int = CLASS_ID,
+    val name: String,
+    val mark: String,
+    val mood: String
+) : ApiBase() {
+    companion object {
+        const val CLASS_ID = 0x00000021
+    }
+    init {
+        if (classId != CLASS_ID)
+            throw ClassCastException()
+    }
+}
+
+/**
+ * Оценка или отметка о посещаемости урока
+ * @param classId Идентификатор класса
+ * @param mood Тип оценки: хороший, средний, плохой или другой для отметки о посещаемости
+ * @param value Полученная оценка или отметка о посещаемости
+ * @author Максим Дрючин (tgmaksim)
+ * */
+@Serializable data class ScheduleLog(
+    override val classId: Int = CLASS_ID,
+    val mood: String,
+    val value: String
+) : ApiBase() {
+    companion object {
+        const val CLASS_ID = 0x00000016
+    }
+    init {
+        if (classId != CLASS_ID)
+            throw ClassCastException()
+    }
+}
+
 /**
  * Урок
  * @param number Порядковый номер урока начиная с 0
  * @param subject Название предмета урока
  * @param place Кабинет или другое место проведения урока
  * @param hours Время проведения урока в виде [ScheduleHours]
+ * @param logs Оценки и отметки о посещаемости урока
+ * @param othersMarks Оценки других учеников за урок
  * @param homework Домашнее задание к уроку
  * @param files Дополнительные файлы к домашнему заданию в виде списка из файлов [ScheduleHomeworkDocument]
  * @author Максим Дрючин (tgmaksim)
@@ -104,11 +150,13 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     val subject: String,
     val place: String,
     val hours: ScheduleHours,
+    val logs: List<ScheduleLog>,
+    val othersMarks: List<ScheduleOtherMark>,
     val homework: String?,
     val files: List<ScheduleHomeworkDocument>
 ) : ApiBase() {
     companion object {
-        const val CLASS_ID = 0x00000011
+        const val CLASS_ID = 0x00000017
     }
     init {
         if (classId != CLASS_ID)
@@ -135,7 +183,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     val extracurricularActivities: List<ScheduleExtracurricularActivity>
 ) : ApiBase() {
     companion object {
-        const val CLASS_ID = 0x00000012
+        const val CLASS_ID = 0x00000018
         const val DATE_FORMAT = "yyyy-MM-dd"
     }
     init {
@@ -158,7 +206,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     val schedule: List<ScheduleDay>
 ) : ApiBase() {
     companion object {
-        const val CLASS_ID = 0x00000013
+        const val CLASS_ID = 0x00000019
     }
     init {
         if (classId != CLASS_ID)
@@ -180,7 +228,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     override val answer: ScheduleResult?
 ) : ApiResponse() {
     companion object {
-        const val CLASS_ID = 0x00000014
+        const val CLASS_ID = 0x00000020
     }
     init {
         if (classId != CLASS_ID)

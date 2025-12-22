@@ -9,8 +9,8 @@ import android.content.Intent
 import android.view.ViewGroup
 import android.content.Context
 import kotlinx.coroutines.launch
+import android.widget.FrameLayout
 import android.view.LayoutInflater
-import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import java.time.format.DateTimeFormatter
@@ -39,7 +39,7 @@ class SchedulePage : Fragment() {
     private lateinit var ui: SchedulePageBinding
     private var isDarkTheme: Boolean = false
     /** Текущий выбранный день в виде [ScheduleCalendarDayBinding.root] */
-    private lateinit var lastSelected: LinearLayout
+    private lateinit var lastSelected: FrameLayout
 
     companion object {
         private var schedule: List<ScheduleDay>? = null
@@ -87,18 +87,22 @@ class SchedulePage : Fragment() {
 
         // Синхронизация только при первой отрисовке или после входа по ссылке
         val intentData = requireActivity().intent.data
+        var needUpdate = false
         if (schedule == null || intentData?.getQueryParameter("updateScheduleToken") != updateToken) {
             updateToken = intentData?.getQueryParameter("updateScheduleToken")
+            needUpdate = true
+        }
 
+        showScheduleCalendar()  // Отображение даты на 2 недели (15 дней)
+        showCacheSchedule()  // Показ расписания из кеша
+
+        if (needUpdate) {
             lifecycleScope.launch {
                 ui.swipeRefresh.isRefreshing = true
                 loadCloudSchedule()  // Получение актуальных данных
                 ui.swipeRefresh.isRefreshing = false
             }
         }
-
-        showScheduleCalendar()  // Отображение даты на 2 недели (15 дней)
-        showCacheSchedule()  // Показ расписания из кеша
 
         return ui.root
     }
@@ -120,8 +124,21 @@ class SchedulePage : Fragment() {
         )
         ui.dayPager.layoutManager = layoutManager
 
+        // Подсчет сдвига в расписании относительно сегодняшнего дня
+        val schedule = schedule!!
+        val firstDate = schedule.getOrNull(0)?.let { LocalDate.parse(it.date, dateFormat) }
+        val offset = firstDate?.until(LocalDate.now())
+
         // Создание адаптера с возможностью перелистывания
-        ui.dayPager.adapter = DayPagerAdapter(requireActivity(), schedule!!)
+        ui.dayPager.adapter = DayPagerAdapter(
+            requireActivity(),
+            if (offset == null || offset.months > 0 || offset.years > 0 || offset.days >= SCHEDULE_LENGTH) {
+                List(SCHEDULE_LENGTH) { null }  // Локальное расписание полностью неактуально
+            } else {
+                schedule.drop(offset.days) + List(offset.days) { null }  // Сдвиг вправо на offset.days
+            }
+        )
+
         val snapHelper = PagerSnapHelper().apply {
             attachToRecyclerView(ui.dayPager)
         }
@@ -143,7 +160,7 @@ class SchedulePage : Fragment() {
                     layoutManager.getPosition(it)
                 } ?: return
 
-                selectItemCalendar(ui.calendar.getChildAt(position) as LinearLayout)
+                selectItemCalendar(ui.calendar.getChildAt(position) as FrameLayout)
             }
         })
 
@@ -287,7 +304,7 @@ class SchedulePage : Fragment() {
      * @param item Объект дня в мини-календаре
      * @author Максим Дрючин (tgmaksim)
      * */
-    private fun openDay(item: LinearLayout) {
+    private fun openDay(item: FrameLayout) {
         selectItemCalendar(item)
 
         val index = ui.calendar.indexOfChild(item)
@@ -299,7 +316,7 @@ class SchedulePage : Fragment() {
      * @param item Объект дня в мини-календаре
      * @author Максим Дрючин (tgmaksim)
      * */
-    private fun selectItemCalendar(item: LinearLayout) {
+    private fun selectItemCalendar(item: FrameLayout) {
         // Обновление выделения
         lastSelected.isSelected = false
         item.isSelected = true

@@ -26,4 +26,9 @@
     <color name="dialog_background">#B3E5FC</color>
     <color name="dialog_button_positive">#0066CC</color>
     <color name="dialog_button_negative">#555555</color>
+
+    <color name="lesson_log_good">#4B9A25</color>
+    <color name="lesson_log_average">#FF8F00</color>
+    <color name="lesson_log_bad">#CF3838</color>
+    <color name="lesson_log_more">#94ACC8</color>
 </resources>

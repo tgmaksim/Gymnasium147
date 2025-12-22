@@ -17,7 +17,7 @@ import ru.tgmaksim.gymnasium.api.ScheduleDay
  * */
 class DayPagerAdapter(
     private val activity: FragmentActivity,
-    private var schedule: List<ScheduleDay>
+    private var schedule: List<ScheduleDay?>
 ) : RecyclerView.Adapter<DayPagerAdapter.DayViewHolder>() {
     private lateinit var _lessons: RecyclerView
     val lessons: RecyclerView?
@@ -43,7 +43,7 @@ class DayPagerAdapter(
      * */
     fun updateSchedule(newSchedule: List<ScheduleDay>) {
         schedule = newSchedule
-        notifyDataSetChanged()
+        notifyItemRangeChanged(0, itemCount)
     }
 
     class DayViewHolder(view: View, private var activity: FragmentActivity) : RecyclerView.ViewHolder(view) {
@@ -63,9 +63,13 @@ class DayPagerAdapter(
          * @param day День расписания
          * @author Максим Дрючин (tgmaksim)
          * */
-        fun bind(day: ScheduleDay) {
-            if (day.lessons.isEmpty()) {
-                // Показывается фото выходного дня
+        fun bind(day: ScheduleDay?) {
+            if (day == null) {
+                // День отсутствует в расписании
+                lessons.visibility = View.GONE
+                weekend.visibility = View.GONE
+            } else if (day.lessons.isEmpty()) {
+                // Показывается фото выходного дня, так как уроков нет
                 lessons.visibility = View.GONE
                 weekend.visibility = View.VISIBLE
             } else {

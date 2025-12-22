@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import android.text.method.LinkMovementMethod
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
 
 import ru.tgmaksim.gymnasium.R
 import ru.tgmaksim.gymnasium.api.ScheduleHours
@@ -63,7 +64,7 @@ class LessonsAdapter(
         lessons = newLessons
         hoursEA = newHoursEA
         ea = newEA
-        notifyDataSetChanged()
+        notifyItemRangeChanged(0, itemCount)
     }
 
     private fun getLesson(holder: LessonViewHolder, position: Int): ScheduleLesson {
@@ -87,6 +88,8 @@ class LessonsAdapter(
                 subject = subjects,
                 place = place,
                 hours = hoursEA ?: ScheduleHours(start = "00:00", end = "00:00"),
+                logs = emptyList(),
+                othersMarks = emptyList(),
                 homework = null,
                 files = emptyList()
             )
@@ -97,6 +100,7 @@ class LessonsAdapter(
         val time: TextView = view.findViewById(R.id.time)
         val subject: TextView = view.findViewById(R.id.subject)
         val place: TextView = view.findViewById(R.id.place)
+        val logs: RecyclerView = view.findViewById(R.id.logs)
         val homework: TextView = view.findViewById(R.id.homework)
         val homeworkGroup: LinearLayout = view.findViewById(R.id.homeworkGroup)
         val filesContainer: LinearLayout = view.findViewById(R.id.filesContainer)
@@ -111,8 +115,7 @@ class LessonsAdapter(
             if (lesson.homework?.isEmpty() == false) {
                 homework.text = lesson.homework
                 homeworkGroup.visibility = View.VISIBLE
-            }
-            else {
+            } else {
                 homework.text = R.string.homework_not_found.toString()
                 homeworkGroup.visibility = View.GONE
             }
@@ -128,6 +131,14 @@ class LessonsAdapter(
                 createFileSpannable(activity, viewHomeworkFile, file.fileName, file.downloadUrl)
                 filesContainer.addView(viewHomeworkFile)
             }
+
+            // Показываются оценки и отметки о посещаемости
+            logs.layoutManager = LinearLayoutManager(
+                view.context,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+            logs.adapter = LogsAdapter(lesson.logs)
         }
 
         private fun createFileSpannable(

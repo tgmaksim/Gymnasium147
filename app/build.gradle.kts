@@ -2,11 +2,15 @@ import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // Переменные окружения
-val propsFile = rootProject.file("variables.properties")
+val propsFile = rootProject.file("variables.xml")
 val props = Properties()
 
 if (propsFile.exists()) {
-    props.load(propsFile.inputStream())
+    propsFile.inputStream().use {
+        props.loadFromXML(it)
+    }
+} else {
+    error("variables.xml not found")
 }
 
 val buildNumber = props.getProperty("BUILD_NUMBER").toInt()
@@ -22,7 +26,9 @@ val newBuildNumber = buildNumber + 1
 gradle.taskGraph.whenReady {
     if (hasTask(":app:assembleDebug") || hasTask(":app:assembleRelease")) {
         props["BUILD_NUMBER"] = newBuildNumber.toString()
-        props.store(propsFile.writer(), null)
+        propsFile.outputStream().use {
+            props.storeToXML(it, null, "UTF-8")
+        }
     }
 }
 
