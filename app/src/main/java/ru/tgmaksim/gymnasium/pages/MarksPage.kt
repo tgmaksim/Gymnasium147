@@ -34,6 +34,8 @@ class MarksPage : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Utilities.log("MarksPage загружена")
+        Utilities.log("MarksPage загружена", tag="load") {
+            param("place", "MarksPage")
+        }
     }
 }

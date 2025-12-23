@@ -49,7 +49,9 @@ class LoginActivity : ParentActivity() {
             hideLoading()
         }
 
-        Utilities.log("LoginActivity запущен")
+        Utilities.log("LoginActivity запущен", tag="load") {
+            param("place", "LoginActivity")
+        }
     }
 
     private suspend fun login() {
@@ -57,7 +59,9 @@ class LoginActivity : ParentActivity() {
             val response = Login.login()
 
             if (!response.status || response.answer == null) {
-                response.error?.let { Utilities.log(it.type) }
+                response.error?.let {
+                    Utilities.log("API error(${it.type}) at login: ${it.errorMessage}")
+                }
 
                 if (response.error?.errorMessage != null) {
                     Utilities.showText(this, response.error.errorMessage)
@@ -70,10 +74,14 @@ class LoginActivity : ParentActivity() {
                 return
             }
 
-            if (Utilities.openUrl(this, response.answer.loginUrl))
+            if (Utilities.openUrl(this, response.answer.loginUrl)) {
+                Utilities.log("login", tag="account") {
+                    param("type", "login")
+                }
                 finish()
+            }
         } catch (_: CancellationException) {
-
+            hideLoading()
         } catch (e: Exception) {
             Utilities.log(e)
             if (!Request.checkInternet())
@@ -88,12 +96,12 @@ class LoginActivity : ParentActivity() {
             val response = Login.login()
 
             response.error?.let {
-                Utilities.log(it.type)
+                Utilities.log("API error(${it.type}) at prepareLogin: ${it.errorMessage}")
             }
 
             loginUrl = response.answer?.loginUrl
         } catch (_: CancellationException) {
-
+            hideLoading()
         } catch (e: Exception) {
             Utilities.log(e)
         }

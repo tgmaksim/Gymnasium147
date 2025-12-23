@@ -37,12 +37,20 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
     namespace = "ru.tgmaksim.gymnasium"
     compileSdk {
         version = release(36)
+    }
+
+    applicationVariants.all {
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output.outputFileName = "gymnasium_v$appVersion.apk"
+        }
     }
 
     defaultConfig {
@@ -103,6 +111,7 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation("com.google.firebase:firebase-crashlytics")
     implementation(platform(libs.firebase.bom))
 
     api(libs.firebase.messaging)

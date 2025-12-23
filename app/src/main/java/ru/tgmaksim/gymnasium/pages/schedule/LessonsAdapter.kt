@@ -5,6 +5,7 @@ import android.text.Spanned
 import android.graphics.Color
 import android.text.TextPaint
 import android.view.ViewGroup
+import android.text.TextUtils
 import android.widget.TextView
 import android.widget.LinearLayout
 import android.view.LayoutInflater
@@ -113,7 +114,7 @@ class LessonsAdapter(
 
             // Показывается или скрывается домашнее задание
             if (lesson.homework?.isEmpty() == false) {
-                homework.text = lesson.homework
+                homework.text = lesson.homework.trimIndent()
                 homeworkGroup.visibility = View.VISIBLE
             } else {
                 homework.text = R.string.homework_not_found.toString()
@@ -170,9 +171,13 @@ class LessonsAdapter(
                 }
             }, 0, spannable.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-            fileNameView.text = spannable
-            fileNameView.movementMethod = LinkMovementMethod.getInstance()
-            fileNameView.highlightColor = Color.TRANSPARENT
+            fileNameView.apply {
+                text = spannable
+                movementMethod = LinkMovementMethod.getInstance()
+                highlightColor = Color.TRANSPARENT
+                setSingleLine()
+                ellipsize = TextUtils.TruncateAt.MIDDLE
+            }
 
             return viewHomeworkFile
         }

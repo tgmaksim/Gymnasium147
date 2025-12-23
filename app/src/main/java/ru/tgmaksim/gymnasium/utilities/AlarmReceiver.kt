@@ -40,7 +40,10 @@ class AlarmReceiver : BroadcastReceiver() {
                 NotificationManager.ALARM_REQUEST_CODE_EA
             )
 
-            Utilities.log("Создано напоминание на $timestamp")
+            Utilities.log("Создано напоминание на $timestamp", tag="reminds") {
+                param("about", "EA")
+                param("timestamp", timestamp)
+            }
         }
     }
 
@@ -64,12 +67,14 @@ class AlarmReceiver : BroadcastReceiver() {
 
             val nowMilli = LocalDateTime.now().toInstant(ZonedDateTime.now().offset).toEpochMilli()
             if (timestamp != -1L && nowMilli - timestamp > MAX_TIMEOUT) {
-                Utilities.log("Timeout notification: $timestamp")
+                Utilities.log("Timeout notification: $timestamp", tag="notifications") {
+                    param("type", "timeout")
+                    param("timeout", nowMilli - timestamp)
+                }
                 return
             }
 
             if (channel != null && title != null && message != null && priority != -1) {
-                Utilities.log("Отправлено уведомление $title: $message")
                 NotificationManager.showNotification(
                     context,
                     channel,
@@ -77,6 +82,10 @@ class AlarmReceiver : BroadcastReceiver() {
                     message,
                     priority
                 )
+                Utilities.log("Отправлено уведомление $title: $message", tag="notifications") {
+                    param("type", "send")
+                    param("channel", channel)
+                }
             }
         }
     }

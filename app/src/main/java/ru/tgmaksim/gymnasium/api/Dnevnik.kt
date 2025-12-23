@@ -6,7 +6,7 @@ import ru.tgmaksim.gymnasium.utilities.Utilities
 import ru.tgmaksim.gymnasium.utilities.CacheManager
 
 /**
- * Запрос расписания на 2 недели (15 дней)
+ * Запрос расписания на 3 недели (22 дня): 7 дней до сегодня, сегодня и 15 дней после
  * @param classId Идентификатор класса
  * @param data Данные сессии
  * @author Максим Дрючин (tgmaksim)
@@ -16,7 +16,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
     override val data: ApiSession?
 ) : ApiRequest() {
     companion object {
-        const val CLASS_ID = 0x00000015
+        const val CLASS_ID = 0x00000022
     }
 }
 
@@ -196,9 +196,9 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 }
 
 /**
- * Результат запроса расписания на 2 недели (15 дней)
+ * Результат запроса расписания на 3 недели (22 дня): 7 дней до сегодня, сегодня и 15 дней после
  * @param classId Идентификатор класса
- * @param schedule Расписание на 2 недели (15 дней)
+ * @param schedule Расписание на 3 недели (22 дня): 7 дней до сегодня, сегодня и 15 дней после
  * @author Максим Дрючин (tgmaksim)
  * */
 @Serializable data class ScheduleResult(
@@ -215,7 +215,7 @@ import ru.tgmaksim.gymnasium.utilities.CacheManager
 }
 
 /**
- * Ответ на запрос расписания на 2 недели (15 дней)
+ * Ответ на запрос расписания на 3 недели (22 дня): 7 дней до сегодня, сегодня и 15 дней после
  * @property classId Идентификатор класса
  * @property status Статус выполненного запроса
  * @property error Объект API-ошибки
@@ -270,7 +270,8 @@ object Dnevnik {
 
     /**
      * Получение сохраненного расписания из кеша
-     * @return Расписание на 2 недели (15 дней) в виде списка из [ScheduleDay]
+     * @return Расписание на 3 недели (22 дня): 7 дней до сегодня,
+     * сегодня и 15 дней после — в виде списка из [ScheduleDay]
      * @author Максим Дрючин (tgmaksim)
      * */
     fun getCacheSchedule() : List<ScheduleDay> {

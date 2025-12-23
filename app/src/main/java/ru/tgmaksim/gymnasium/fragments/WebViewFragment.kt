@@ -32,12 +32,19 @@ class WebViewFragment : Fragment() {
          * @return экземпляр [WebViewFragment]
          * @author Максим Дрючин (tgmaksim)
          * */
-        fun newInstance(url: String): WebViewFragment =
-            WebViewFragment().apply {
+        fun newInstance(url: String): WebViewFragment {
+            val browserUrl = if (
+                url.endsWith(".jpg") ||
+                url.endsWith(".png") ||
+                url.endsWith(".jpeg")) url
+            else BuildConfig.DOCS_VIEW_ULR + url
+
+            return WebViewFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_URL, BuildConfig.DOCS_VIEW_ULR + url)
+                    putString(ARG_URL, browserUrl)
                 }
             }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,6 +100,9 @@ class WebViewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Utilities.log("WebViewFragment(url=$url) загружена")
+        Utilities.log("WebViewFragment(url=$url) загружена", tag="load") {
+            param("place", "WebViewFragment")
+            param("url", url.toString())
+        }
     }
 }

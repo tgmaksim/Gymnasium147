@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="12dp"
     android:layout_margin="5dp"
     android:layout_marginBottom="8dp"
@@ -10,110 +11,133 @@
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Верхняя часть -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:layout_weight="1">
 
-        <!-- Левая часть: время, место и предмет -->
+        <!-- Верхняя часть -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
-            <!-- Время и место -->
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <!-- Левая часть: время, место и предмет -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical">
 
-                <!-- Время -->
-                <TextView
-                    android:id="@+id/time"
+                <androidx.constraintlayout.helper.widget.Flow
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/default_bells_schedule"
-                    android:textSize="14sp"
-                    android:textColor="@color/lesson_time"
-                    android:fontFamily="sans-serif-medium" />
+                    app:constraint_referenced_ids="subject,time_place"
+                    app:flow_wrapMode="chain"
+                    app:flow_horizontalStyle="packed"
+                    app:flow_horizontalBias="0"
+                    app:flow_horizontalGap="8dp"
+                    app:flow_verticalGap="4dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
-                <!-- Кабинет или другое место -->
+                <!-- Название предмета -->
                 <TextView
-                    android:id="@+id/place"
+                    android:id="@+id/subject"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/default_place"
-                    android:layout_marginStart="10dp"
-                    android:textSize="14sp"
-                    android:textColor="@color/lesson_place" />
+                    android:text="@string/default_subject"
+                    android:textSize="18sp"
+                    android:textColor="@color/lesson_subject"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false" />
 
-            </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/time_place"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="1dp">
 
-            <!-- Название предмета -->
-            <TextView
-                android:id="@+id/subject"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/default_subject"
-                android:layout_marginTop="4dp"
-                android:textSize="18sp"
-                android:textColor="@color/lesson_subject"
-                android:fontFamily="sans-serif-medium" />
+                    <!-- Время -->
+                    <TextView
+                        android:id="@+id/time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/default_bells_schedule"
+                        android:textSize="14sp"
+                        android:textColor="@color/lesson_time"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <!-- Кабинет или другое место -->
+                    <TextView
+                        android:id="@+id/place"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/default_place"
+                        android:layout_marginStart="10dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/lesson_place" />
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
 
-        <!-- Правая часть: оценки и отметки о посещаемости урока -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/logs"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:overScrollMode="never"
-            android:scrollbars="none"
-            android:orientation="horizontal" />
-
-    </LinearLayout>
-
-    <!-- Домашнее задание -->
-    <LinearLayout
-        android:id="@+id/homeworkGroup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="6dp">
-
-        <!-- Эмодзи домашнего задания -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="@string/homework_emoji"
-            android:textSize="14sp"
-            android:fontFamily="sans-serif" />
-
-        <!-- Текст домашнего задания -->
-        <TextView
-            android:id="@+id/homework"
+        <!-- Домашнее задание -->
+        <LinearLayout
+            android:id="@+id/homeworkGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textIsSelectable="true"
-            android:layout_marginStart="5dp"
-            android:text="@string/homework_not_found"
-            android:textSize="14sp"
-            android:textColor="@color/lesson_homework_text"
-            android:fontFamily="sans-serif"
-            android:lineSpacingExtra="2dp"
-            android:maxLines="10"
-            android:ellipsize="end" />
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+
+            <!-- Эмодзи домашнего задания -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="@string/homework_emoji"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif" />
+
+            <!-- Текст домашнего задания -->
+            <TextView
+                android:id="@+id/homework"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textIsSelectable="true"
+                android:layout_marginStart="5dp"
+                android:text="@string/homework_not_found"
+                android:textSize="14sp"
+                android:textColor="@color/lesson_homework_text"
+                android:fontFamily="sans-serif"
+                android:lineSpacingExtra="2dp"
+                android:maxLines="10"
+                android:ellipsize="end"
+                android:autoLink="web"
+                android:linksClickable="true" />
+
+        </LinearLayout>
+
+        <!-- Файлы к домашнему заданию -->
+        <LinearLayout
+            android:id="@+id/filesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
 
     </LinearLayout>
 
-    <!-- Файлы к домашнему заданию -->
-    <LinearLayout
-        android:id="@+id/filesContainer"
-        android:layout_width="match_parent"
+    <!-- Правая часть: оценки и отметки о посещаемости урока -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/logs"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical" />
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        android:orientation="horizontal" />
 
 </LinearLayout>

@@ -8,7 +8,13 @@ import androidx.core.net.toUri
 import androidx.annotation.StringRes
 import android.content.DialogInterface
 import android.content.ActivityNotFoundException
+
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.logEvent
+import com.google.firebase.analytics.analytics
+import com.google.firebase.analytics.ParametersBuilder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 import ru.tgmaksim.gymnasium.R
 
@@ -67,21 +73,38 @@ object Utilities {
     }
 
     /**
-     * Логирование данных
-     * @param text текстовые данные для логирования
+     * Логирование данных локально и отправка в Firebase
+     * @param string текстовые данные для логирования
+     * @param tag дополнительный тег для логов
+     * @param analytics параметры для firebase-аналитики
      * @author Максим Дрючин (tgmaksim)
      * */
-    fun log(text: String) {
-        Log.d("Gymnasium", text)
+    fun log(string: String, tag: String, analytics: (ParametersBuilder.() -> Unit)? = null) {
+        Log.d("Gymnasium.$tag", string)
+
+        Firebase.analytics.logEvent(tag, analytics ?: return)
     }
 
     /**
-     * Логирование данных об ошибке
+     * Логирование данных о некорректных данных локально и отправка в Firebase Crashlytics
+     * @param e описание ошибки
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    fun log(e: String) {
+        Log.e("Gymnasium.error", e)
+
+        FirebaseCrashlytics.getInstance().log(e)
+    }
+
+    /**
+     * Логирование данных об ошибке локально и отправка в Firebase Crashlytics
      * @param e возникшая ошибка
      * @author Максим Дрючин (tgmaksim)
      * */
     fun log(e: Exception) {
-        Log.e("Gymnasium", "Ошибка", e)
+        Log.e("Gymnasium.error", "Ошибка", e)
+
+        FirebaseCrashlytics.getInstance().recordException(e)
     }
 
     /**

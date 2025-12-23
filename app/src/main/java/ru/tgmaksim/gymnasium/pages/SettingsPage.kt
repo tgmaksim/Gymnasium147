@@ -42,16 +42,28 @@ class SettingsPage : Fragment() {
 
         ui.settingsWebView.setOnCheckedChangeListener { _, isChecked ->
             CacheManager.openWebView = isChecked
+            Utilities.log("openWebView = $isChecked", tag="settings") {
+                param("name", "open_web_view")
+                param("is_checked", isChecked.toString())
+            }
         }
         ui.settingsEANotifications.setOnCheckedChangeListener { switch, isChecked ->
             if (!isChecked) {
                 CacheManager.EANotifications = false
+                Utilities.log("EANotifications = false", tag="settings") {
+                    param("name", "ea_notifications")
+                    param("is_checked", "false")
+                }
                 return@setOnCheckedChangeListener
             }
 
             val context = requireContext()
             if (NotificationManager.checkPermission(context) && NotificationManager.canScheduleExactAlarms(context)) {
                 CacheManager.EANotifications = true
+                Utilities.log("EANotifications = true", tag="settings") {
+                    param("name", "ea_notifications")
+                    param("is_checked", "true")
+                }
                 SchedulePage.createRemindEA(context)
             } else {
                 switch.isChecked = false
@@ -62,6 +74,10 @@ class SettingsPage : Fragment() {
             if (CacheManager.isDarkTheme != isChecked) {
                 CacheManager.isDarkTheme = isChecked
                 (requireActivity() as ParentActivity).setupActivityTheme()
+            }
+            Utilities.log("theme = ${if (isChecked) "dark" else "light"}", tag="settings") {
+                param("name", "is_dark_theme")
+                param("is_checked", isChecked.toString())
             }
         }
 
@@ -78,14 +94,23 @@ class SettingsPage : Fragment() {
         // Нажатие на кнопку обновления
         ui.buttonUpdate.setOnClickListener {
             Utilities.openUrl(requireContext(), BuildConfig.DOMAIN)
+            Utilities.log("openUrl(${BuildConfig.DOMAIN})", tag="open_url") {
+                param("url", BuildConfig.DOMAIN)
+            }
         }
         ui.buttonOpenSite.setOnClickListener {
             Utilities.openUrl(requireContext(), BuildConfig.DOMAIN)
+            Utilities.log("openUrl(${BuildConfig.DOMAIN})", tag="open_url") {
+                param("url", BuildConfig.DOMAIN)
+            }
         }
         ui.buttonLogout.setOnClickListener {
             CacheManager.apiSession = null
             val intent = Intent(requireContext(), LoginActivity::class.java)
             startActivity(intent)
+            Utilities.log("logout", tag="account") {
+                param("type", "logout")
+            }
             requireActivity().finish()
         }
 
@@ -94,6 +119,8 @@ class SettingsPage : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Utilities.log("SettingsPage загружена")
+        Utilities.log("SettingsPage загружена", tag="load") {
+            param("place", "SettingsPage")
+        }
     }
 }

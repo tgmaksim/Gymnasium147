@@ -13,6 +13,7 @@
 
     <color name="glass_card_bg">#40FFFFFF</color>
 
+    <color name="calendar_today">#4B9A25</color>
     <color name="lesson_time">#7B1FA2</color>
     <color name="lesson_subject">#000000</color>
     <color name="lesson_place">#555555</color>

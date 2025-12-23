@@ -67,7 +67,9 @@ class MainActivity : ParentActivity() {
             checkVersion()
         }
 
-        Utilities.log("MainActivity запущен")
+        Utilities.log("MainActivity запущен", tag="load") {
+            param("place", "MainActivity")
+        }
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
@@ -98,9 +100,9 @@ class MainActivity : ParentActivity() {
 
             if (!response.status || response.answer == null) {
                 response.error?.let { error ->
-                    Utilities.log(error.type)
-                    error.errorMessage?.let { errorMessage ->
-                        Utilities.showText(this, errorMessage)
+                    Utilities.log("API error(${error.type}) at checkVersion: ${error.errorMessage}}")
+                    error.errorMessage?.let {
+                        Utilities.showText(this, it)
                     }
                 }
 
@@ -110,8 +112,11 @@ class MainActivity : ParentActivity() {
             if (response.answer.latestVersionNumber <= BuildConfig.VERSION_CODE)
                 return
 
-            Utilities.log("Обнаружена новая версия: " +
-                    "${response.answer.latestVersionString} (${response.answer.latestVersionNumber})")
+            Utilities.log("Обнаружена новая версия: ${response.answer.latestVersionString} " +
+                    "(${response.answer.latestVersionNumber})", tag="version") {
+                param("now", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                param("found", "${response.answer.latestVersionString} (${response.answer.latestVersionNumber})")
+            }
 
             CacheManager.versionStatus = response.answer
 
@@ -127,6 +132,16 @@ class MainActivity : ParentActivity() {
                     this,
                     response.answer.versionStatus,
                     "Вышло обновление, которое требуется установить для корректной работы приложения",
+                    "Настройки",
+                    true
+                ) { _, _ ->
+                    ui.bottomMenu.selectedItemId = R.id.it_settings
+                }
+            } else if (response.answer.versionStatus == "Новая функция") {
+                Utilities.showAlertDialog(
+                    this,
+                    response.answer.versionStatus,
+                    "В обновлении приложения появилась новая функция. Уже можно пользоваться",
                     "Настройки",
                     true
                 ) { _, _ ->

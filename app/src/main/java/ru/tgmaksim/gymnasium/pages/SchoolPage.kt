@@ -34,6 +34,8 @@ class SchoolPage : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Utilities.log("SchoolPage загружена")
+        Utilities.log("SchoolPage загружена", tag="load") {
+            param("place", "SchoolPage")
+        }
     }
 }

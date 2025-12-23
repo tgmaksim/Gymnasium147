@@ -44,7 +44,7 @@ class SchedulePage : Fragment() {
     companion object {
         private var schedule: List<ScheduleDay>? = null
         private val dateFormat = DateTimeFormatter.ofPattern(ScheduleDay.DATE_FORMAT)
-        private const val SCHEDULE_LENGTH = 15
+        private const val SCHEDULE_LENGTH = 22
         private var updateToken: String? = null
 
         /**
@@ -93,7 +93,8 @@ class SchedulePage : Fragment() {
             needUpdate = true
         }
 
-        showScheduleCalendar()  // Отображение даты на 2 недели (15 дней)
+        // Отображение даты на 3 недели (22 дня): 7 дней до сегодня, сегодня и 15 дней после
+        showScheduleCalendar()
         showCacheSchedule()  // Показ расписания из кеша
 
         if (needUpdate) {
@@ -109,7 +110,9 @@ class SchedulePage : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Utilities.log("SchedulePage загружена")
+        Utilities.log("SchedulePage загружена", tag="load") {
+            param("place", "SchedulePage")
+        }
     }
 
     /**
@@ -127,9 +130,10 @@ class SchedulePage : Fragment() {
         // Подсчет сдвига в расписании относительно сегодняшнего дня
         val schedule = schedule!!
         val firstDate = schedule.getOrNull(0)?.let { LocalDate.parse(it.date, dateFormat) }
-        val offset = firstDate?.until(LocalDate.now())
+        val offset = firstDate?.until(LocalDate.now().minusDays(7))
 
         // Создание адаптера с возможностью перелистывания
+        val todayPosition = schedule.indexOfFirst { LocalDate.parse(it.date, dateFormat) == LocalDate.now() }
         ui.dayPager.adapter = DayPagerAdapter(
             requireActivity(),
             if (offset == null || offset.months > 0 || offset.years > 0 || offset.days >= SCHEDULE_LENGTH) {
@@ -144,10 +148,10 @@ class SchedulePage : Fragment() {
         }
 
         // Выбор активного дня: до 15:00 - текущий, после - следующий
-        if (LocalTime.now().hour > 15)
-            ui.dayPager.scrollToPosition(1)  // Прокрутка без анимации
+        if (LocalTime.now().hour >= 15)
+            ui.dayPager.scrollToPosition(todayPosition + 1)  // Прокрутка без анимации
         else
-            ui.dayPager.scrollToPosition(0)  // Возвращение в начальное положение
+            ui.dayPager.scrollToPosition(todayPosition)  // Возвращение в начальное положение
 
         // Инициализация обработчика для смены активного дня в календаре
         ui.dayPager.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -187,8 +191,9 @@ class SchedulePage : Fragment() {
      * @author Максим Дрючин (tgmaksim)
      * */
     private fun showCacheSchedule() {
-        schedule = Dnevnik.getCacheSchedule()
+        schedule = Dnevnik.getCacheSchedule().let { if (it.size == SCHEDULE_LENGTH) it else emptyList() }
 
+        drawWeekends()
         initDayPagerAdapter()  // Инициализация адаптера и показ расписания
     }
 
@@ -252,13 +257,16 @@ class SchedulePage : Fragment() {
             return
         }
 
-        Utilities.log("Успешная загрузка расписания")
+        Utilities.log("Успешная загрузка расписания", tag="load") {
+            param("place", "schedule")
+        }
 
         // Есть изменения
         if (cacheSchedule != schedule.hashCode()) {
             schedule?.let {
                 (ui.dayPager.adapter as DayPagerAdapter).updateSchedule(it)
             }
+            drawWeekends()
         }
         createRemindEA(requireContext())  // Напоминание о новых внеурочных занятиях
     }
@@ -269,14 +277,16 @@ class SchedulePage : Fragment() {
      * */
     private fun showScheduleCalendar() {
         val today = LocalDate.now()
+        val firstDay = today.minusDays(7)
         val time = LocalTime.now()
 
-        repeat(SCHEDULE_LENGTH) { i ->  // Заполнение дней на 2 недели (15 дней)
+        // Заполнение дней на 3 недели (22 дня): 7 дней до сегодня, сегодня и 15 дней после
+        repeat(SCHEDULE_LENGTH) { i ->
             val item = ScheduleCalendarDayBinding.inflate(layoutInflater, ui.calendar, false)
             item.root.setBackgroundResource(R.drawable.bg_button_day_selected)
 
             // Число и день недели
-            val date = today.plusDays(i.toLong())
+            val date = firstDay.plusDays(i.toLong())
             item.dayNumber.text = date.dayOfMonth.toString()
             item.root.tag = date // Идентификация по дате
 
@@ -285,9 +295,13 @@ class SchedulePage : Fragment() {
             item.weekday.text = dayOfWeek.uppercase()
 
             // Выбор активного дня: до 15:00 - текущий, после - следующий
-            if (i == 0 && time.hour < 15 || i == 1 && time.hour >= 15) {
+            if (date == today && time.hour < 15 || date == today.plusDays(1) && time.hour >= 15) {
                 lastSelected = item.root
-                item.root.isSelected = true
+                selectItemCalendar(item.root)
+            }
+
+            if (date == today) {
+                item.root.isActivated = true  // Сегодня
             }
 
             // Определение действия при нажатии
@@ -319,13 +333,25 @@ class SchedulePage : Fragment() {
     private fun selectItemCalendar(item: FrameLayout) {
         // Обновление выделения
         lastSelected.isSelected = false
-        item.isSelected = true
+        item.isSelected = true  // Выбран
         lastSelected = item
 
         // Центрирование кнопки текущего дня
         ui.calendarScroll.post {
             val scrollTo = item.left - (ui.calendarScroll.width - item.width) / 2
             ui.calendarScroll.smoothScrollTo(scrollTo, 0)
+        }
+    }
+
+    /**
+     * Закрашивание обводки дня в мини-календаре мягким красным цветом, обозначающим выходной день
+     * @author Максим Дрючин (tgmaksim)
+     * */
+    fun drawWeekends() {
+        val schedule = schedule ?: return
+        for (i in 0..<SCHEDULE_LENGTH) {
+            if (schedule.getOrNull(i)?.lessons?.isEmpty() == true)
+                ui.calendar.getChildAt(i).isHovered = true  // Выходной
         }
     }
 
